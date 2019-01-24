@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Vue-Python sample 1</title>
+  <script src="lib/vue.js"></script>
+  <!--script src="lib/axios.min.js"></script-->
+  <link rel="stylesheet" href="lib/picnic.min.css" />
+  <style>
+  .info { color: darkblue; }
+  td { border: 1px solid black; padding: 1em; }
+  input:disabled { color: darkred; }
+  </style>
+</head>
+<body>
+
+  <div id="main">
+    <a v-for="cmd in suggestions" @click="meth1(cmd)" class="button">run {{cmd}}</a>
+    {{ i }}
+    <a @click="clone('clone')" class="button">+ clone</a>
+  </div>
+
+<script>
+
+var wsInit = new WebSocket("ws://localhost:4259/init");
+wsInit.addEventListener('message', function(a) {
+  console.log(a);
+  a = JSON.parse(a.data)
+  var ws = new WebSocket("ws://localhost:4259/");
+  let methods = {}
+  for (let k of a.methods) {
+    methods[k] = function(...args) {
+      ws.send(k)
+      ws.send(JSON.stringify(args))
+    }
+  }
+  let vm = new Vue({
+    el: '#main',
+    data: () => ({
+      ...a.state
+    }),
+    methods
+  });
+  ws.addEventListener('message', function(a) {
+    a = a.data
+    if (a.startsWith('UPDATE ')) {
+      let parts = a.split(' ', 2)
+      let k = parts[1]
+      let v = a.substr(parts.join(" ").length)
+      vm.$set(vm, k, JSON.parse(v))
+    }
+  })
+});
+</script>
+</body>
+</html>
