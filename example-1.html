@@ -18,6 +18,7 @@
     <a v-for="cmd in suggestions" @click="meth1(cmd)" class="button">run {{cmd}}</a>
     {{ i }}
     <a @click="clone('clone')" class="button">+ clone</a>
+    <input v-model="i"></input>
   </div>
 
 <script>
@@ -28,8 +29,21 @@ wsInit.addEventListener('message', function(a) {
   a = JSON.parse(a.data)
   var ws = new WebSocket("ws://localhost:4259/");
   let methods = {}
+  let watch = {}
+  let valuesWhere = {}
+  for (let k in a.state) {
+    watch[k] = function (v, old) {
+      console.log(v, old)
+      if (valuesWhere[k] == v) return
+      delete valuesWhere[k]
+      ws.send('UPDATE')
+      ws.send(k)
+      ws.send(v)
+    }
+  }
   for (let k of a.methods) {
     methods[k] = function(...args) {
+      ws.send('CALL')
       ws.send(k)
       ws.send(JSON.stringify(args))
     }
@@ -39,7 +53,8 @@ wsInit.addEventListener('message', function(a) {
     data: () => ({
       ...a.state
     }),
-    methods
+    methods,
+    watch
   });
   ws.addEventListener('message', function(a) {
     a = a.data
@@ -47,7 +62,9 @@ wsInit.addEventListener('message', function(a) {
       let parts = a.split(' ', 2)
       let k = parts[1]
       let v = a.substr(parts.join(" ").length)
-      vm.$set(vm, k, JSON.parse(v))
+      v = JSON.parse(v)
+      valuesWhere[k] = v
+      vm.$set(vm, k, v)
     }
   })
 });

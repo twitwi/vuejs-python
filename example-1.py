@@ -64,11 +64,17 @@ async def handleClient(websocket, path):
     else:
         all.append(websocket)
         while True:
-            meth = await websocket.recv()
-            print('METH', meth)
-            data = await websocket.recv()
-            print('DATA', data)
-            res = await getattr(o, meth)(*json.loads(data))
+            comm = await websocket.recv()
+            if comm == 'CALL':
+                meth = await websocket.recv()
+                print('METH', meth)
+                data = await websocket.recv()
+                print('DATA', data)
+                res = await getattr(o, meth)(*json.loads(data))
+            elif comm == 'UPDATE':
+                k = await websocket.recv()
+                v = await websocket.recv()
+                setattr(o, k, json.loads(v))
 
 
 #inreader = asyncio.StreamReader(sys.stdin)
