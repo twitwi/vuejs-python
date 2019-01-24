@@ -7,9 +7,6 @@
   <!--script src="lib/axios.min.js"></script-->
   <link rel="stylesheet" href="lib/picnic.min.css" />
   <style>
-  .info { color: darkblue; }
-  td { border: 1px solid black; padding: 1em; }
-  input:disabled { color: darkred; }
   </style>
 </head>
 <body>
@@ -19,6 +16,7 @@
     {{ i }}
     <a @click="clone('clone')" class="button">+ clone</a>
     <input v-model="i"></input>
+    <progress style="width: 500px" max="100" :value="i"></progress>
   </div>
 
 <script>

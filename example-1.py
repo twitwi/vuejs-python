@@ -46,6 +46,11 @@ async def broadcast_update(k, v):
         except:
             pass
 
+async def demo_incr():
+    while True:
+        await asyncio.sleep(3)
+        o.i += 3
+        await o._up('i')
 
 async def handleClient(websocket, path):
     if path == '/init':
@@ -80,4 +85,5 @@ async def handleClient(websocket, path):
 #inreader = asyncio.StreamReader(sys.stdin)
 ws_server = websockets.serve(handleClient, 'localhost', 4259)
 asyncio.ensure_future(ws_server)
+asyncio.ensure_future(demo_incr())
 asyncio.get_event_loop().run_forever()
