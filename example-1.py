@@ -79,7 +79,10 @@ async def handleClient(websocket, path):
             elif comm == 'UPDATE':
                 k = await websocket.recv()
                 v = await websocket.recv()
-                setattr(o, k, json.loads(v))
+                try:
+                    setattr(o, k, json.loads(v))
+                except:
+                    print("Not a JSON value for key", k, "->", v)
 
 
 #inreader = asyncio.StreamReader(sys.stdin)
