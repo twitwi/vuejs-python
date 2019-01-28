@@ -14,6 +14,7 @@
   <div id="main">
     <a v-for="cmd in suggestions" @click="meth1(cmd)" class="button">run {{cmd}}</a>
     {{ i }}
+    <br/>
     <a @click="clone('clone')" class="button">+ clone</a>
     <input v-model="i"></input>
     <progress style="width: 500px" max="100" :value="i"></progress>
