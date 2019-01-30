@@ -3,6 +3,18 @@ import asyncio
 import websockets
 import json
 
+def is_ndarray(a):
+    try:
+        import numpy
+        return type(a) == numpy.ndarray
+    except:
+        return False
+
+def sanitize(v): # for sending as JSON
+    if is_ndarray(v):
+        return v.tolist()
+    return v
+
 def make_prop(k, cb):
     f = '_'+k
     def get(o):
@@ -17,7 +29,7 @@ def replace_by_prop(o, k, cb):
     setattr(o, k, make_prop(k, cb))
 
 def model(cls):
-    novue = cls._novue if cls._novue else []
+    novue = cls._novue if hasattr(cls, '_novue') else []
     o = cls
     for k in filter(lambda k: k[0] != '_' and k not in novue, dir(o)):
         if not callable(getattr(o, k)):
@@ -25,6 +37,7 @@ def model(cls):
     return cls
 
 def _up(self, k):
+    print(k)
     asyncio.ensure_future(broadcast_update(k, getattr(self, k)))
 
 
@@ -34,7 +47,9 @@ async def broadcast_update(k, v):
     all[:] = []
     for ws in a:
         try:
+            v = sanitize(v)
             await ws.send("UPDATE "+str(k)+" "+json.dumps(v))
+            print('⇒ UPDATE', k, json.dumps(v))
             all.append(ws)
         except:
             pass
@@ -49,10 +64,12 @@ def handleClient(o):
                     methods.append(k)
                 else:
                     state[k] = getattr(o, k)
+                    state[k] = sanitize(state[k])
             to_send = {
                 'state': state,
                 'methods': methods
             }
+            print('⇒ INIT', list(state.keys()))
             await websocket.send(json.dumps(to_send))
         else:
             all.append(websocket)
@@ -60,13 +77,14 @@ def handleClient(o):
                 comm = await websocket.recv()
                 if comm == 'CALL':
                     meth = await websocket.recv()
-                    print('METH', meth)
+                    print('⇐ METH', meth)
                     data = await websocket.recv()
-                    print('DATA', data)
+                    print('⇐ DATA', data)
                     res = await getattr(o, meth)(*json.loads(data))
                 elif comm == 'UPDATE':
                     k = await websocket.recv()
                     v = await websocket.recv()
+                    print('⇐ UPDATE', k, v)
                     try:
                         setattr(o, k, json.loads(v))
                     except:
