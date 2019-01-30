@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Vue-Python sample 1</title>
+  <script src="lib/vue.js"></script>
+  <!--script src="lib/axios.min.js"></script-->
+  <link rel="stylesheet" href="lib/picnic.min.css" />
+  <style>
+  .card { margin: 20px; }
+  .data { width: 1px; height: 1px; visibility: hidden; /*display: none;*/ }
+  .current { background: yellow; }
+  .histo { display: flex; align-items: flex-end; min-height: 100px; }
+  .help-load { background: white; position: absolute; padding: 100px; border: 5px solid black; }
+  .help-load:hover {z-index: 1000;}
+  </style>
+</head>
+<body>
+
+  <div id="main">
+
+    <button @click="setCC(currentClass-1)">«</button>
+    <button @click="setCC(currentClass+1)">»</button>
+    Current class: <input v-model.number="currentClass" disabled></input>
+
+    <hr/>
+    <div v-for="s in [importance, importance2, importance3]">
+      <div class="histo">
+        <div v-for="(v, i) in s" @mouseover="setCS(i)" :class="{current: currentShapelet==i}" :style="{border: '1px solid '+(v>0 ? 'green' : 'red'), height: Math.abs(v)*0.2+'px', width: '10px'}" :title="v"></div>
+      </div>
+    </div>
+    <h5>class {{currentClass}} - mean(others) (top)</h5>
+    <h5>class {{currentClass}} - max(others)  (bottom)</h5>
+
+    <hr/>
+    <img :src="currentImage"></img>
+  </div>
+
+<script>
+
+var wsInit = new WebSocket("ws://localhost:4259/init");
+wsInit.addEventListener('message', function(a) {
+  console.log(a);
+  a = JSON.parse(a.data)
+  var ws = new WebSocket("ws://localhost:4259/");
+  let methods = {}
+  let watch = {}
+  let valuesWhere = {}
+  for (let k in a.state) {
+    watch[k] = function (v, old) {
+      console.log(v, old)
+      if (valuesWhere[k] == v) return
+      delete valuesWhere[k]
+      ws.send('UPDATE')
+      ws.send(k)
+      ws.send(v)
+    }
+  }
+  for (let k of a.methods) {
+    methods[k] = function(...args) {
+      ws.send('CALL')
+      ws.send(k)
+      ws.send(JSON.stringify(args))
+    }
+  }
+  let vm = new Vue({
+    el: '#main',
+    data: () => ({
+      ...a.state
+    }),
+    methods,
+    watch
+  });
+  ws.addEventListener('message', function(a) {
+    a = a.data
+    if (a.startsWith('UPDATE ')) {
+      let parts = a.split(' ', 2)
+      let k = parts[1]
+      let v = a.substr(parts.join(" ").length)
+      v = JSON.parse(v)
+      valuesWhere[k] = v
+      vm.$set(vm, k, v)
+    }
+  })
+});
+</script>
+</body>
+</html>
