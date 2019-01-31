@@ -28,16 +28,19 @@ def replace_by_prop(o, k, cb):
     setattr(o, '_'+k, getattr(o, k))
     setattr(o, k, make_prop(k, cb))
 
+def field_should_be_synced(cls):
+    novue = cls._novue if hasattr(cls, '_novue') else []
+    return lambda k: k[0] != '_' and k not in novue
+
 def model(cls):
     novue = cls._novue if hasattr(cls, '_novue') else []
     o = cls
-    for k in filter(lambda k: k[0] != '_' and k not in novue, dir(o)):
+    for k in filter(field_should_be_synced(cls), dir(cls)):
         if not callable(getattr(o, k)):
             replace_by_prop(o, k, _up)
     return cls
 
 def _up(self, k):
-    print(k)
     asyncio.ensure_future(broadcast_update(k, getattr(self, k)))
 
 
@@ -57,9 +60,10 @@ async def broadcast_update(k, v):
 def handleClient(o):
     async def handleClient(websocket, path):
         if path == '/init':
+            clss = type(o)
             state = {}
             methods = []
-            for k in filter(lambda k: k[0] != '_', o.__dir__()):
+            for k in filter(field_should_be_synced(clss), dir(clss)):
                 if callable(getattr(o, k)):
                     methods.append(k)
                 else:

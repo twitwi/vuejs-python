@@ -18,6 +18,7 @@ class Comp:
     _novue = ['subtitle']
 
     def __init__(self):
+        self.i = 55
         asyncio.ensure_future(self.demo_incr(2, 3))
         pass
 
@@ -28,6 +29,7 @@ class Comp:
 
     async def meth1(self, v):
         print("Com", v)
+        self.subtitle = "Changed: "+v # will not trigger change as _novue
         if v == 'salut':
             self.i += 1
             #await self._up('i')
