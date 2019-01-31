@@ -84,7 +84,10 @@ def handleClient(o):
                     print('⇐ METH', meth)
                     data = await websocket.recv()
                     print('⇐ DATA', data)
-                    res = await getattr(o, meth)(*json.loads(data))
+                    try:
+                        res = await getattr(o, meth)(*json.loads(data))
+                    except Exception as inst:
+                        print('... exception while calling method:', inst)
                 elif comm == 'UPDATE':
                     k = await websocket.recv()
                     v = await websocket.recv()
