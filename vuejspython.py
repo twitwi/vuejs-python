@@ -77,25 +77,29 @@ def handleClient(o):
             await websocket.send(json.dumps(to_send))
         else:
             all.append(websocket)
-            while True:
-                comm = await websocket.recv()
-                if comm == 'CALL':
-                    meth = await websocket.recv()
-                    print('⇐ METH', meth)
-                    data = await websocket.recv()
-                    print('⇐ DATA', data)
-                    try:
-                        res = await getattr(o, meth)(*json.loads(data))
-                    except Exception as inst:
-                        print('... exception while calling method:', inst)
-                elif comm == 'UPDATE':
-                    k = await websocket.recv()
-                    v = await websocket.recv()
-                    print('⇐ UPDATE', k, v)
-                    try:
-                        setattr(o, k, json.loads(v))
-                    except:
-                        print("Not a JSON value for key", k, "->", v)
+            try:
+                while True:
+                    comm = await websocket.recv()
+                    if comm == 'CALL':
+                        meth = await websocket.recv()
+                        print('⇐ METH', meth)
+                        data = await websocket.recv()
+                        print('⇐ DATA', data)
+                        try:
+                            res = await getattr(o, meth)(*json.loads(data))
+                        except Exception as inst:
+                            print('... exception while calling method:', inst)
+                    elif comm == 'UPDATE':
+                        k = await websocket.recv()
+                        v = await websocket.recv()
+                        print('⇐ UPDATE', k, v)
+                        try:
+                            setattr(o, k, json.loads(v))
+                        except:
+                            print("Not a JSON value for key", k, "->", v)
+            except:
+                print('X websocket disconnected')
+                pass # disconnected
     return handleClient
 
 def start(o, port=4259, host='localhost'):
