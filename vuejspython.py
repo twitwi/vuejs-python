@@ -21,8 +21,8 @@ def make_prop(k):
         return getattr(o, f)
     def set(o, v):
         setattr(o, f, v)
-        _up(o, k)
-        maybe_call_watcher(o, k)
+        broadcast(o, k)
+        call_watcher(o, k)
     return property(get, set)
 
 def replace_by_prop(o, k):
@@ -33,6 +33,7 @@ def field_should_be_synced(cls):
     novue = cls._novue if hasattr(cls, '_novue') else []
     return lambda k: k[0] != '_' and k not in novue
 
+# class annotation
 def model(cls):
     novue = cls._novue if hasattr(cls, '_novue') else []
     o = cls
@@ -41,10 +42,14 @@ def model(cls):
             replace_by_prop(o, k)
     return cls
 
-def _up(self, k):
+# method annotation
+def computed(meth):
+    return meth
+
+def broadcast(self, k):
     asyncio.ensure_future(broadcast_update(k, getattr(self, k)))
 
-def maybe_call_watcher(o, k):
+def call_watcher(o, k):
     watcher = 'watch_'+k
     if hasattr(o, watcher):
         watcher = getattr(o, watcher)
@@ -102,7 +107,7 @@ def handleClient(o):
                         print('⇐ UPDATE', k, v)
                         try:
                             setattr(o, k, json.loads(v))
-                            maybe_call_watcher(o, k)
+                            call_watcher(o, k)
                         except:
                             print("Not a JSON value for key", k, "->", v)
             except:
