@@ -14,6 +14,7 @@ class Comp:
     suggestions = ['salut', 'ToTo']
     title = 'Test1'
     i = 42
+    i2 = i*i
     subtitle = 'very local'
     _novue = ['subtitle']
 
@@ -21,6 +22,10 @@ class Comp:
         self.i = 55
         asyncio.ensure_future(self.demo_incr(2, 3))
         pass
+
+    def watch_i(self, i):
+        self.i2 = i*i
+
 
     async def demo_incr(self, t, v):
         while True:

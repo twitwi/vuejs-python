@@ -15,18 +15,19 @@ def sanitize(v): # for sending as JSON
         return v.tolist()
     return v
 
-def make_prop(k, cb):
+def make_prop(k):
     f = '_'+k
     def get(o):
         return getattr(o, f)
     def set(o, v):
         setattr(o, f, v)
-        cb(o, k)
+        _up(o, k)
+        maybe_call_watcher(o, k)
     return property(get, set)
 
-def replace_by_prop(o, k, cb):
+def replace_by_prop(o, k):
     setattr(o, '_'+k, getattr(o, k))
-    setattr(o, k, make_prop(k, cb))
+    setattr(o, k, make_prop(k))
 
 def field_should_be_synced(cls):
     novue = cls._novue if hasattr(cls, '_novue') else []
@@ -37,12 +38,18 @@ def model(cls):
     o = cls
     for k in filter(field_should_be_synced(cls), dir(cls)):
         if not callable(getattr(o, k)):
-            replace_by_prop(o, k, _up)
+            replace_by_prop(o, k)
     return cls
 
 def _up(self, k):
     asyncio.ensure_future(broadcast_update(k, getattr(self, k)))
 
+def maybe_call_watcher(o, k):
+    watcher = 'watch_'+k
+    if hasattr(o, watcher):
+        watcher = getattr(o, watcher)
+        if callable(watcher):
+            watcher(getattr(o, k))
 
 all = []
 async def broadcast_update(k, v):
@@ -95,6 +102,7 @@ def handleClient(o):
                         print('⇐ UPDATE', k, v)
                         try:
                             setattr(o, k, json.loads(v))
+                            maybe_call_watcher(o, k)
                         except:
                             print("Not a JSON value for key", k, "->", v)
             except:
