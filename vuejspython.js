@@ -12,7 +12,6 @@ vuejspython.start = function(wsurl, opt={}) {
   }
   var wsInit = new WebSocket(wsurl+'/init');
   wsInit.addEventListener('message', function(a) {
-    console.log(a);
     a = JSON.parse(a.data)
     var ws = new WebSocket(wsurl+'/');
     let computed = {...opt.computed}
@@ -21,7 +20,6 @@ vuejspython.start = function(wsurl, opt={}) {
     let valuesWhere = {}
     for (let k in a.state) {
       watch[k] = function (v, old) {
-        console.log(v, old)
         if (valuesWhere[k] == v) return
         delete valuesWhere[k]
         ws.send('UPDATE')

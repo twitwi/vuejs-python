@@ -73,6 +73,7 @@ def field_should_be_synced(cls):
 def model(cls):
     prefix = 'computed_'
     novue = cls._v_novue if hasattr(cls, '_v_novue') else []
+    cls._v_nobroadcast = cls._v_nobroadcast if hasattr(cls, '_v_nobroadcast') else []
     computed = [k[len(prefix):] for k in dir(cls) if k.startswith(prefix)]
     cls._v_computed = {}
     for k in computed:
@@ -86,6 +87,7 @@ def model(cls):
 
 
 def broadcast(self, k):
+    if k in self._v_nobroadcast: return
     asyncio.ensure_future(broadcast_update(k, getattr(self, k)))
 
 def call_watcher(o, k):

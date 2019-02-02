@@ -13,6 +13,7 @@ class Comp:
     currentImage = ''
     folder, groups, scale = 'unzip-nouveau', [30, 30, 30], 100
     #folder, groups, scale = 'epoch8000', [40, 40, 40], 1
+    _v_nobroadcast = ['wa']
 
     def __init__(self):
         # can add local properties here (to avoid having to fill _novue)
