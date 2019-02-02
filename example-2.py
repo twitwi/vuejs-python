@@ -24,7 +24,6 @@ class Comp:
             np.genfromtxt(self.folder+'/mp_shapelet_group_'+str(i)+'.txt') for i in range(len(self.groups))
         ])
         self.update()
-        pass
 
     def update(self):
         a = self.activations   # ts, sh
