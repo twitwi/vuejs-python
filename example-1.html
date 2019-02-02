@@ -13,7 +13,7 @@
 
   <div id="main">
     <a v-for="cmd in suggestions" @click="meth1(cmd)" class="button">run {{cmd}}</a>
-    {{ i }}² = {{ i2 }}
+    {{ i }}² = {{ i2 }} = {{ i_squared }}
     <br/>
     <a @click="clone('clone')" class="button">+ clone</a>
     <input v-model="i"></input>

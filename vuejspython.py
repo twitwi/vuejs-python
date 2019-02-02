@@ -18,33 +18,69 @@ def sanitize(v): # for sending as JSON
 def make_prop(k):
     f = '_'+k
     def get(o):
+        if hasattr(o, '_v_currently_computing') and o._v_currently_computing != []: # may be triggered before "start" (in __init__)
+            o._v_deps[o._v_currently_computing[-1]].append(k)
+            print("DEPS", o._v_deps)
         return getattr(o, f)
     def set(o, v):
+        if getattr(o, f) is v: return
+        try:
+            if getattr(o, f) == v: return
+        except:
+            pass # e.g. exception with numpy compare
         setattr(o, f, v)
-        broadcast(o, k)
         call_watcher(o, k)
+        update_computed_depending_on(o, k)
+        broadcast(o, k)
     return property(get, set)
 
-def replace_by_prop(o, k):
-    setattr(o, '_'+k, getattr(o, k))
-    setattr(o, k, make_prop(k))
+def make_computed_prop(k):
+    def get(o):
+        if k not in o._v_cache:
+            recompute_computed(o, k)
+        return o._v_cache[k]
+    return property(get, None)
+    # TODO: might want to allow set() in some way (see vue)
+
+def update_computed_depending_on(o, k):
+    if not hasattr(o, '_v_deps'): return
+    for f, deps in o._v_deps.items():
+        if k in deps:
+            deps[:] = []
+            recompute_computed(o, f)
+
+def recompute_computed(o, k):
+    o._v_currently_computing += [k]
+    v = o._v_computed[k](o)
+    del o._v_currently_computing[-1]
+    if k not in o._v_cache or o._v_cache[k] != v:
+        o._v_cache[k] = v
+        update_computed_depending_on(o, k)
+        broadcast(o, k)
 
 def field_should_be_synced(cls):
-    novue = cls._novue if hasattr(cls, '_novue') else []
+    novue = cls._v_novue if hasattr(cls, '_v_novue') else []
     return lambda k: k[0] != '_' and k not in novue
-
-# class annotation
-def model(cls):
-    novue = cls._novue if hasattr(cls, '_novue') else []
-    o = cls
-    for k in filter(field_should_be_synced(cls), dir(cls)):
-        if not callable(getattr(o, k)):
-            replace_by_prop(o, k)
-    return cls
 
 # method annotation
 def computed(meth):
+    meth._v_comp = True
     return meth
+
+# class annotation
+def model(cls):
+    novue = cls._v_novue if hasattr(cls, '_v_novue') else []
+    computed = [k for k in dir(cls) if hasattr(getattr(cls, k), '_v_comp')]
+    cls._v_computed = {}
+    for k in computed:
+        cls._v_computed[k] = getattr(cls, k)
+        setattr(cls, k, make_computed_prop(k))
+    for k in filter(field_should_be_synced(cls), dir(cls)):
+        if not callable(getattr(cls, k)):
+            setattr(cls, '_'+k, getattr(cls, k))
+            setattr(cls, k, make_prop(k))
+    return cls
+
 
 def broadcast(self, k):
     asyncio.ensure_future(broadcast_update(k, getattr(self, k)))
@@ -108,14 +144,23 @@ def handleClient(o):
                         try:
                             setattr(o, k, json.loads(v))
                             call_watcher(o, k)
-                        except:
-                            print("Not a JSON value for key", k, "->", v)
+                        except Exception as e:
+                            print("Not a JSON value (or watcher error) for key", k, "->", v, "//", e)
+                            import traceback
+                            traceback.print_exc()
             except:
                 print('X websocket disconnected')
                 pass # disconnected
     return handleClient
 
 def start(o, port=4259, host='localhost'):
+    o._v_cache = {}
+    o._v_currently_computing = []
+    o._v_deps = {}
+    for k in o._v_computed.keys():
+        o._v_deps[k] = []
+    for k in o._v_computed.keys():
+        recompute_computed(o, k)
     #inreader = asyncio.StreamReader(sys.stdin)
     ws_server = websockets.serve(handleClient(o), host, port)
     asyncio.ensure_future(ws_server)
