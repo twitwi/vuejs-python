@@ -62,18 +62,14 @@ def field_should_be_synced(cls):
     novue = cls._v_novue if hasattr(cls, '_v_novue') else []
     return lambda k: k[0] != '_' and k not in novue
 
-# method annotation
-def computed(meth):
-    meth._v_comp = True
-    return meth
-
 # class annotation
 def model(cls):
+    prefix = 'computed_'
     novue = cls._v_novue if hasattr(cls, '_v_novue') else []
-    computed = [k for k in dir(cls) if hasattr(getattr(cls, k), '_v_comp')]
+    computed = [k[len(prefix):] for k in dir(cls) if k.startswith(prefix)]
     cls._v_computed = {}
     for k in computed:
-        cls._v_computed[k] = getattr(cls, k)
+        cls._v_computed[k] = getattr(cls, prefix+k)
         setattr(cls, k, make_computed_prop(k))
     for k in filter(field_should_be_synced(cls), dir(cls)):
         if not callable(getattr(cls, k)):

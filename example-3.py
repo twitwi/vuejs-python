@@ -2,7 +2,7 @@
 import asyncio
 from reactive.ObservableDict import ObservableDict
 
-from vuejspython import model, computed, start
+from vuejspython import model, start
 
 
 @model
@@ -15,22 +15,14 @@ class Comp:
     def __init__(self):
         self.i = 1
 
-    @computed
-    def i_squared(self): return self.i**2
-    @computed
-    def i_mod2(self): return self.i%2
-    @computed
-    def odd(self): return self.i_mod2 == 1
-    @computed
-    def even(self): return not self.odd
-    @computed
-    def iorisquared(self): return self.i if self.odd else self.i_squared
-    @computed
-    def iorj(self): return self.i if self.even else self.j
-    @computed
-    def loopy(self): return self.iorisquared # + self.loopy2 # causes recursion error
-    @computed
-    def loopy2(self): return self.iorj + self.loopy
+    def computed_i_squared(self): return self.i**2
+    def computed_i_mod2(self): return self.i%2
+    def computed_odd(self): return self.i_mod2 == 1
+    def computed_even(self): return not self.odd
+    def computed_iorisquared(self): return self.i if self.odd else self.i_squared
+    def computed_iorj(self): return self.i if self.even else self.j
+    def computed_loopy(self): return self.iorisquared # + self.loopy2 # causes recursion error
+    def computed_loopy2(self): return self.iorj + self.loopy
 
 
     async def demo_incr(self, t, v):

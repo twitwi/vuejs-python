@@ -2,7 +2,7 @@
 import asyncio
 from reactive.ObservableDict import ObservableDict
 
-from vuejspython import model, computed, start
+from vuejspython import model, start
 
 
 @model # this annotation could start the things automatically (if there is a single model anyway)
@@ -23,8 +23,7 @@ class Comp:
     def watch_i(self, i):
         self.i2 = i*i
 
-    @computed
-    def i_squared(self):
+    def computed_i_squared(self):
         print("COMPUTING i_squared")
         return self.i**2
 
