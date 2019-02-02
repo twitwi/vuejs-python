@@ -92,5 +92,4 @@ class Comp:
 #state['title'] = 'Test1'
 
 m = Comp()
-# todo, might want to implement derived properties as methods (by annotating them as @computed so they are setup properly on the html side)
-vuejspython.start(m)
+vuejspython.start(Comp(), port=4242)

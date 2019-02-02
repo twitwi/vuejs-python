@@ -13,12 +13,11 @@ class Comp:
     i = 42
     i2 = i*i
     subtitle = 'very local'
-    _v_novue = ['subtitle']
+    _v_novue = ['subtitle'] # proprty names to exclude
 
     def __init__(self):
         self.i = 55
         asyncio.ensure_future(self.demo_incr(2, 3))
-        pass
 
     def watch_i(self, i):
         self.i2 = i*i
@@ -37,10 +36,8 @@ class Comp:
         self.subtitle = "Changed: "+v # will not trigger change as _novue
         if v == 'salut':
             self.i += 1
-            #await self._up('i')
 
     async def clone(self, v):
         self.suggestions += [v]
-        #_up(self, 'suggestions')
 
 vuejspython.start(Comp())
