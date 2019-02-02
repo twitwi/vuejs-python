@@ -12,7 +12,7 @@
 
   <div id="main">
     <a v-for="cmd in suggestions" @click="meth1(cmd)" class="button">run {{cmd}}</a>
-    {{ i }}² = {{ i2 }} = {{ i_squared }}
+    {{ i }}² = {{ i2 }} = {{ i_squared }} = {{ i2_injs }}
     <br/>
     <a @click="clone('clone')" class="button">+ clone</a>
     <input v-model="i"></input>
@@ -21,9 +21,15 @@
 
   <script src="vuejspython.js"></script>
   <script>
-  vuejspython.start('localhost') // can use a full ws://....:port url also
-  // ^ TODO: handle computed for js-computed stuff + maybe local data?
-  // ^ TODO: handle startup callbacks
+  vuejspython.start('localhost', // can also use a full URL ws://....:
+    { // optionnal configuration object
+      computed: { // computed on the js side
+        i2_injs: function () {
+          return this.i * this.i
+        }
+      }
+    })
+  // ^ TODO: maybe handle startup callbacks
   </script>
 </body>
 </html>

@@ -3,7 +3,7 @@ var vuejspython = {}
 
 vuejspython.defaultPort =
 
-vuejspython.start = function(wsurl) {
+vuejspython.start = function(wsurl, opt={}) {
   if (! wsurl.startsWith('ws')) {
     wsurl = 'ws://'+wsurl
   }
@@ -15,6 +15,7 @@ vuejspython.start = function(wsurl) {
     console.log(a);
     a = JSON.parse(a.data)
     var ws = new WebSocket(wsurl+'/');
+    let computed = {...opt.computed}
     let methods = {}
     let watch = {}
     let valuesWhere = {}
@@ -40,6 +41,7 @@ vuejspython.start = function(wsurl) {
       data: () => ({
         ...a.state
       }),
+      computed,
       methods,
       watch
     });
