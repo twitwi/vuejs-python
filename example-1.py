@@ -2,10 +2,10 @@
 import asyncio
 from reactive.ObservableDict import ObservableDict
 
-from vuejspython import model, start
+import vuejspython
 
 
-@model # this annotation could start the things automatically (if there is a single model anyway)
+@vuejspython.model
 class Comp:
     # define properties to forward to vue (or not)
     suggestions = ['salut', 'ToTo']
@@ -43,9 +43,4 @@ class Comp:
         self.suggestions += [v]
         #_up(self, 'suggestions')
 
-#state = ObservableDict()
-#state = {}
-#state['suggestions'] = ['salut', 'TOto']
-#state['title'] = 'Test1'
-
-start(Comp())
+vuejspython.start(Comp())
