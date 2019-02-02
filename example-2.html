@@ -19,14 +19,14 @@
 
   <div id="main">
 
-    <button @click="setCC(currentClass-1)">«</button>
-    <button @click="setCC(currentClass+1)">»</button>
-    Current class: <input v-model.number="currentClass" disabled></input>
+    <button @click="currentClass -= 1">«</button>
+    <button @click="currentClass += 1">»</button>
+    Current class: <input v-model.number="currentClass" ></input>
 
     <hr/>
     <div v-for="s in [importance, importance2, importance3]">
       <div class="histo">
-        <div v-for="(v, i) in s" @mouseover="setCS(i)" :class="{current: currentShapelet==i}" :style="{border: '1px solid '+(v>0 ? 'green' : 'red'), height: Math.abs(v)*0.2+'px', width: '10px'}" :title="v"></div>
+        <div v-for="(v, i) in s" @mouseover="currentShapelet = i" :class="{current: currentShapelet==i}" :style="{border: '1px solid '+(v>0 ? 'green' : 'red'), height: Math.abs(v)*0.2+'px', width: '10px'}" :title="v"></div>
       </div>
     </div>
     <h5>class {{currentClass}} - mean(others) (top)</h5>

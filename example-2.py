@@ -59,12 +59,10 @@ class Comp:
 
         #self.importance = importance.tolist()
 
-    async def setCC(self, cc):
-        self.currentClass = cc
+    def watch_currentClass(self, cc):
         self.update()
 
-    async def setCS(self, cs):
-        self.currentShapelet = cs
+    def watch_currentShapelet(self, cs):
         # up current image
         g = 0
         while cs >= self.groups[g]:
