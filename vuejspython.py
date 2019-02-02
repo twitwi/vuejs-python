@@ -15,6 +15,13 @@ def sanitize(v): # for sending as JSON
         return v.tolist()
     return v
 
+def cache_stale(cache, k, v):
+    if k not in cache: return True
+    if cache[k] is v: return False
+    if is_ndarray(v):
+        return (v != cache[k]).any()
+    return cache[k] != v
+
 def make_prop(k):
     f = '_'+k
     def get(o):
@@ -53,7 +60,7 @@ def recompute_computed(o, k):
     o._v_currently_computing += [k]
     v = o._v_computed[k](o)
     del o._v_currently_computing[-1]
-    if k not in o._v_cache or o._v_cache[k] != v:
+    if cache_stale(o._v_cache, k, v):
         o._v_cache[k] = v
         update_computed_depending_on(o, k)
         broadcast(o, k)
