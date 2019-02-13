@@ -1,7 +1,5 @@
 
 import asyncio
-from reactive.ObservableDict import ObservableDict
-
 import vuejspython
 
 
