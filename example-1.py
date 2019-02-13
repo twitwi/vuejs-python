@@ -39,5 +39,6 @@ class Comp:
 
     def clone(self, v):
         self.suggestions += (v,)
+        # TODO: implement ObservaleList as this would call ".append" in python if we used plain (mutable) lists instead of tuples
 
 vuejspython.start(Comp())
