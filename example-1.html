@@ -6,17 +6,46 @@
   <script src="lib/vue.js"></script>
   <link rel="stylesheet" href="lib/picnic.min.css" />
   <style>
+    body { margin: 2em; }
   </style>
 </head>
 <body>
 
   <div id="main">
-    <a v-for="cmd in suggestions" @click="meth1(cmd)" class="button">run {{cmd}}</a>
-    {{ i }}² = {{ i2 }} = {{ i_squared }} = {{ i2_injs }}
+
+    <h3>{{ title }}</h3>
+
+    We can have a state in Python which is a counter "i".
+    The Python side automatically adds 3 to the counter every few seconds. <br/>
+
+    That state is automatically useable and synchronized in the browser (in Vue.js):
+    <ul>
+      <li>It can be used to print, e.g.: i = {{ i }} and i² = {{ i*i }}</li>
+      <li>Or as the model for a text field that can be modified, e.g., <input v-model="i"></input></li>
+      <li>Or as the value for a read only element, e.g.,<br/>
+        <progress style="width: 500px" max="100" :value="i"></progress><br/>
+        <meter style="width: 500px" max="100" :value="i" low="33" high="66" optimum="10"></meter></li>
+    </ul>
+
+    Changes in the state "i" (triggered by Python or by javascript, e.g., editing the text field) can in turn trigger the refresh of other state values.
+    This can be done with different mechanisms (see the Python and html code for details):
+    <ul>
+      <li>using computed properties (on the Python side): i² = {{ i2 }}</li>
+      <li>using computed properties (on the Javascript side): i² = {{ i2_injs }}</li>
+      <li>or, for very specific cases, using a "watch" (in Python here): i² = {{ i2_withwatch }}</li>
+    </ul>
     <br/>
-    <a @click="clone('clone')" class="button">+ clone</a>
-    <input v-model="i"></input>
-    <progress style="width: 500px" max="100" :value="i"></progress>
+
+    We can call python methods transparently, as with the following buttons/links.
+    Here, these buttons are created from a list of strings which is part of the application state (to illustrate lists and loops).
+    The first button increments the counter "i".<br/>
+    <a v-for="cmd in suggestions" @click="meth1(cmd)" class="button">run {{cmd}}</a>
+    <br/>
+
+    Here is a button that modifies the list of buttons, as a test...
+    <a @click="clone('more...')" class="button">+clone</a>
+
+
   </div>
 
   <script src="vuejspython.js"></script>

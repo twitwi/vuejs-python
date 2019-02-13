@@ -7,23 +7,25 @@ import vuejspython
 
 @vuejspython.model
 class Comp:
-    # define properties to forward to vue (or not)
-    suggestions = ['salut', 'ToTo']
+    # define properties to forward to vue (synchronized state)
+    suggestions = ('+1', 'ToTo')
     title = 'Test1'
     i = 42
-    i2 = i*i
+    i2_withwatch = -1
     subtitle = 'very local'
-    _v_novue = ['subtitle'] # proprty names to exclude
+    _v_novue = ['subtitle'] # property names to exclude from the synchronized state
 
     def __init__(self):
-        self.i = 55
+        self.i = 25
+        # just for the example, starts a loop that increments every few seconds
         asyncio.ensure_future(self.demo_incr(2, 3))
 
     def watch_i(self, i):
-        self.i2 = i*i
+        print("UPDATING i2_withwatch")
+        self.i2_withwatch = i*i
 
-    def computed_i_squared(self):
-        print("COMPUTING i_squared")
+    def computed_i2(self):
+        print("COMPUTING i2")
         return self.i**2
 
     async def demo_incr(self, t, v):
@@ -31,13 +33,13 @@ class Comp:
             await asyncio.sleep(t)
             self.i += v
 
-    async def meth1(self, v):
+    def meth1(self, v):
         print("Com", v)
         self.subtitle = "Changed: "+v # will not trigger change as _novue
-        if v == 'salut':
+        if v == '+1':
             self.i += 1
 
-    async def clone(self, v):
-        self.suggestions += [v]
+    def clone(self, v):
+        self.suggestions += (v,)
 
 vuejspython.start(Comp())
