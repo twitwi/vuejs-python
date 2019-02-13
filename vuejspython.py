@@ -29,7 +29,8 @@ def make_prop(k):
             o._v_deps[o._v_currently_computing[-1]].append(k)
             print("DEPS", o._v_deps)
         return getattr(o, f)
-    def set(o, v):
+    def set(o, v, *args):
+        print("SET", k, o, v, getattr(o, f), args)
         if getattr(o, f) is v: return
         try:
             if getattr(o, f) == v: return
@@ -105,7 +106,7 @@ async def broadcast_update(k, v):
         try:
             v = sanitize(v)
             await ws.send("UPDATE "+str(k)+" "+json.dumps(v))
-            print('⇒ UPDATE', k, json.dumps(v))
+            print(' ⇒ UPDATE', k, json.dumps(v))
             all.append(ws)
         except:
             pass
@@ -135,17 +136,17 @@ def handleClient(o):
                     comm = await websocket.recv()
                     if comm == 'CALL':
                         meth = await websocket.recv()
-                        print('⇐ METH', meth)
+                        print('⇐  METH', meth)
                         data = await websocket.recv()
-                        print('⇐ DATA', data)
+                        print('⇐  DATA', data)
                         try:
-                            res = await getattr(o, meth)(*json.loads(data))
+                            res = getattr(o, meth)(*json.loads(data))
                         except Exception as inst:
                             print('... exception while calling method:', inst)
                     elif comm == 'UPDATE':
                         k = await websocket.recv()
                         v = await websocket.recv()
-                        print('⇐ UPDATE', k, v)
+                        print('⇐  UPDATE', k, v)
                         try:
                             setattr(o, k, json.loads(v))
                             call_watcher(o, k)
