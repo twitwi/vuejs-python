@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Vue-Python sample 5</title>
+  <script src="lib/vue.js"></script>
+  <link rel="stylesheet" href="lib/picnic.min.css" />
+  <style>
+  </style>
+</head>
+<body>
+
+    <div id="main">
+    <p>
+        This is a real example for the γNN approach.
+    </p>
+    <img :src="fname" />
+    <br/>
+    {{gamma}}
+    <input type="range" min="0" max="3" step="0.1" v-model="gamma"></input>
+  </div>
+
+  <script src="vuejspython.js"></script>
+  <script>
+  vuejspython.start('localhost')
+  </script>
+</body>
+</html>
