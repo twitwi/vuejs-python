@@ -126,7 +126,7 @@ async def broadcast_update(k, v):
         try:
             v = sanitize(v)
             await ws.send('UPDATE '+str(k)+' '+json.dumps(v))
-            info('OUT', 'UPDATE', k, json.dumps(v))
+            info('OUT', 'UPDATE', k, '{:.80} ...'.format(json.dumps(v)))
             all.append(ws)
         except:
             pass
