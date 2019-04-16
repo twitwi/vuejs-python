@@ -1,6 +1,5 @@
 
 import asyncio
-from reactive.ObservableDict import ObservableDict
 
 from vuejspython import model, start
 
@@ -8,7 +7,6 @@ from vuejspython import model, start
 @model
 class Comp:
     # define properties to forward to vue (or not)
-    suggestions = ['+1']
     i = 42
     j = 111
 

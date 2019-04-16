@@ -2,10 +2,11 @@
 import asyncio
 import websockets
 import json
+from observablecollections.observablelist import ObservableList
 
 PREFIX = {
-    'IN':  'ð¢║ ',
-    'OUT': ' ║ð¢',
+    'IN':  '🢀║ ',
+    'OUT': ' ║🢂',
     'END': '╚╩╝',
     'ERR': '   ⚠⚠⚠',
     'def': '   ►►►',
@@ -43,17 +44,21 @@ def make_prop(k):
             o._v_deps[o._v_currently_computing[-1]].append(k)
             info("DEPS", o._v_deps)
         return getattr(o, f)
-    def set(o, v, *args):
-        print("SET", k, o, v, getattr(o, f), args)
+    def set(o, v):
+        def trigger_on_change(*args):
+            call_watcher(o, k)
+            update_computed_depending_on(o, k)
+            broadcast(o, k)
+        if type(v) == list:
+            v = ObservableList(v)
+            v.attach(trigger_on_change)
         if getattr(o, f) is v: return
         try:
-            if getattr(o, f) == v: return
+            if type(getattr(o, f)) == type(v) and getattr(o, f) == v: return
         except:
             pass # e.g. exception with numpy compare
         setattr(o, f, v)
-        call_watcher(o, k)
-        update_computed_depending_on(o, k)
-        broadcast(o, k)
+        trigger_on_change()
     return property(get, set)
 
 def make_computed_prop(k):
@@ -96,7 +101,8 @@ def model(cls):
         setattr(cls, k, make_computed_prop(k))
     for k in filter(field_should_be_synced(cls), dir(cls)):
         if not callable(getattr(cls, k)):
-            setattr(cls, '_'+k, getattr(cls, k))
+            v = getattr(cls, k)
+            setattr(cls, '_'+k, v)
             setattr(cls, k, make_prop(k))
     return cls
 
@@ -174,9 +180,14 @@ def handleClient(o):
     return handleClient
 
 def start(o, port=4259, host='localhost'):
+    cls = o.__class__
     o._v_cache = {}
     o._v_currently_computing = []
     o._v_deps = {}
+    # Set all attributes, so they get wrapped (e.g., observable) if necessary
+    for k in filter(field_should_be_synced(cls), dir(cls)):
+        if k not in o._v_computed.keys() and not callable(getattr(o, k)):
+            setattr(o, k, getattr(o, '_'+k))
     for k in o._v_computed.keys():
         o._v_deps[k] = []
     for k in o._v_computed.keys():

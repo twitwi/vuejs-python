@@ -1,6 +1,5 @@
 
 import asyncio
-from reactive.ObservableDict import ObservableDict
 
 import vuejspython
 import numpy as np

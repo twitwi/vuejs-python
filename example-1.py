@@ -6,7 +6,7 @@ import vuejspython
 @vuejspython.model
 class Comp:
     # define properties to forward to vue (synchronized state)
-    suggestions = ('+1', 'ToTo')
+    suggestions = ['+1', 'ToTo']
     title = 'Test1'
     i = 42
     i2_withwatch = -1
@@ -38,7 +38,7 @@ class Comp:
             self.i += 1
 
     def clone(self, v):
-        self.suggestions += (v,)
-        # TODO: implement ObservaleList as this would call ".append" in python if we used plain (mutable) lists instead of tuples
+        print("CLONE", type(self.suggestions))
+        self.suggestions += [v]
 
 vuejspython.start(Comp())
