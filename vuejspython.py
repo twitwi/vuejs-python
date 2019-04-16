@@ -3,6 +3,20 @@ import asyncio
 import websockets
 import json
 
+PREFIX = {
+    'IN':  'ð¢║ ',
+    'OUT': ' ║ð¢',
+    'END': '╚╩╝',
+    'ERR': '   ⚠⚠⚠',
+    'def': '   ►►►',
+}
+infos = ('DEPS'+' IN OUT END ERR').split()
+def info(k, *args, **kwargs):
+    if k in infos:
+        pre = PREFIX['def']
+        if k in PREFIX.keys(): pre = PREFIX[k]
+        print('      ', pre, k, *args, **kwargs)
+
 def is_ndarray(a):
     try:
         import numpy
@@ -27,7 +41,7 @@ def make_prop(k):
     def get(o):
         if hasattr(o, '_v_currently_computing') and o._v_currently_computing != []: # may be triggered before "start" (in __init__)
             o._v_deps[o._v_currently_computing[-1]].append(k)
-            print("DEPS", o._v_deps)
+            info("DEPS", o._v_deps)
         return getattr(o, f)
     def set(o, v, *args):
         print("SET", k, o, v, getattr(o, f), args)
@@ -105,8 +119,8 @@ async def broadcast_update(k, v):
     for ws in a:
         try:
             v = sanitize(v)
-            await ws.send("UPDATE "+str(k)+" "+json.dumps(v))
-            print(' ⇒ UPDATE', k, json.dumps(v))
+            await ws.send('UPDATE '+str(k)+' '+json.dumps(v))
+            info('OUT', 'UPDATE', k, json.dumps(v))
             all.append(ws)
         except:
             pass
@@ -127,7 +141,7 @@ def handleClient(o):
                 'state': state,
                 'methods': methods
             }
-            print('⇒ INIT', list(state.keys()))
+            info('OUT', 'INIT', list(state.keys()))
             await websocket.send(json.dumps(to_send))
         else:
             all.append(websocket)
@@ -136,26 +150,26 @@ def handleClient(o):
                     comm = await websocket.recv()
                     if comm == 'CALL':
                         meth = await websocket.recv()
-                        print('⇐  METH', meth)
+                        info('IN', 'METH', meth)
                         data = await websocket.recv()
-                        print('⇐  DATA', data)
+                        info('IN', 'DATA', data)
                         try:
                             res = getattr(o, meth)(*json.loads(data))
                         except Exception as inst:
-                            print('... exception while calling method:', inst)
+                            info('ERR', '... exception while calling method:', inst)
                     elif comm == 'UPDATE':
                         k = await websocket.recv()
                         v = await websocket.recv()
-                        print('⇐  UPDATE', k, v)
+                        info('IN', 'UPDATE', k, v)
                         try:
                             setattr(o, k, json.loads(v))
                             call_watcher(o, k)
                         except Exception as e:
-                            print("Not a JSON value (or watcher error) for key", k, "->", v, "//", e)
+                            info('ERR', 'Not a JSON value (or watcher error) for key', k, '->', v, '//', e)
                             import traceback
                             traceback.print_exc()
             except:
-                print('X websocket disconnected')
+                info('END', 'websocket disconnected')
                 pass # disconnected
     return handleClient
 

@@ -32,7 +32,7 @@ class Comp:
             self.i += v
 
     def meth1(self, v):
-        print("Com", v)
+        print("COMMAND", v)
         self.subtitle = "Changed: "+v # will not trigger change as _novue
         if v == '+1':
             self.i += 1
