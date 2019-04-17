@@ -76,7 +76,19 @@ def update_computed_depending_on(o, k):
             deps[:] = []
             recompute_computed(o, f)
 
+def recompute_scheduled_computed(o):
+    # TODO use the deps to recompute in the proper order
+    if not hasattr(o, '_v_schedule_recomputing') or len(o._v_schedule_recomputing) == 0: return
+    tocomp = o._v_schedule_recomputing
+    o._v_schedule_recomputing = []
+    for k in tocomp:
+        recompute_computed(o, k)
+    recompute_scheduled_computed(o)
+
 def recompute_computed(o, k):
+    if o._v_just_schedule:
+        o._v_schedule_recomputing += [k]
+        return
     o._v_currently_computing += [k]
     v = o._v_computed[k](o)
     del o._v_currently_computing[-1]
@@ -179,10 +191,22 @@ def handleClient(o):
                 pass # disconnected
     return handleClient
 
+# decorator
+def atomic(f):
+    def _decorator(self, *args, **kwargs):
+        self._v_just_schedule = True
+        f(self, *args, **kwargs)
+        self._v_just_schedule = False
+        recompute_scheduled_computed(self)
+    return _decorator
+
+
 def start(o, port=4259, host='localhost'):
     cls = o.__class__
     o._v_cache = {}
     o._v_currently_computing = []
+    o._v_just_schedule = False
+    o._v_schedule_recomputing = []
     o._v_deps = {}
     # Set all attributes, so they get wrapped (e.g., observable) if necessary
     for k in filter(field_should_be_synced(cls), dir(cls)):
