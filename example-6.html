@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Vue-Python sample 6</title>
+  <script src="lib/vue.js"></script>
+  <link rel="stylesheet" href="lib/picnic.min.css" />
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <style>
+      #main { position: fixed; left:0; top:0; right:0; bottom:0;}
+      #main {  display: flex; flex-direction: column;}
+      #controls { flex: 0;}
+      #ply { flex: 1;}
+      .half { display: inline-block; width: 45%; }
+  </style>
+</head>
+<body>
+  <div id="main">
+    <div id="controls">
+      <button @click="draw_dataset()">Redraw</button>
+      <button @click="showGraph">test</button>
+      <p>
+          This is a real example for the γNN approach, with client side plotly-based plot.
+      </p>
+      <label>
+          <input type="checkbox" v-model="show_points"><span class="checkable">points</span>
+      </label>
+      <label>
+          <input type="checkbox" v-model="show_nn"><span class="checkable">1 NN</span>
+      </label>
+      <br/>
+      {{gamma}}
+      <input type="range" min="0.05" max="3" step="0.05" v-model="gamma"></input>
+    </div>
+    <div id="ply" ref="ply"></div>
+  </div>
+
+  <script src="vuejspython.js"></script>
+  <script>
+  vuejspython.start('localhost',
+      { // optionnal configuration object
+      mounted: function() { // vuejs life cycle
+        this.showGraph()
+      },
+      watch: {
+        gamma: function() { this.showGraph() },
+        im: function() { this.showGraph() },
+      },
+      computed: { // computed on the js side
+      },
+      methods: {
+        showGraph: function () {
+          var graphs = [ {
+            z: this.im,
+            x0: this.xmin,
+            dx: this.dx,
+            y0: this.ymin,
+            dy: this.dy,
+            type: 'contour',
+            showscale: false,
+            autocontour: false,
+            contours: {
+              start: this.gamma,
+              end: this.gamma,
+              size: 0,
+              coloring: 'lines',
+            },
+            line: {
+              width: 3,
+            }
+          },
+          {
+            x: this.xp[0][0],
+            y: this.yp[0][0],
+            type: 'scatter',
+            mode: 'markers',
+            marker: {
+              symbol: 'x',
+              size: 12,
+            },
+          },
+          {
+            x: this.xm[0][0],
+            y: this.ym[0][0],
+            type: 'scatter',
+            mode: 'markers',
+            marker: {
+              symbol: 'circle',
+              size: 12,
+              color: 'blue'
+            },
+          }];
+
+          var layout = {
+            title: 'γ = '+this.gamma,
+            xaxis: {
+              range: [this.xmin, this.xmax]
+            },
+            yaxis: {
+              range: [this.ymin, this.ymax]
+            }
+          };
+
+          if (this.plt === undefined) {
+            this.plt = Plotly.newPlot(this.$refs.ply, graphs, layout, {responsive: true})
+          } else {
+            Plotly.react(this.$refs.ply, graphs, layout, {responsive: true})
+          }
+        }
+      },
+    })
+
+  </script>
+</body>
+</html>
