@@ -4,6 +4,7 @@ var vuejspython = {}
 vuejspython.defaultPort =
 
 vuejspython.start = function(wsurl, opt={}) {
+  if (opt.data === undefined) opt.data = ()=>({})
   if (! wsurl.startsWith('ws')) {
     wsurl = 'ws://'+wsurl
   }
@@ -15,17 +16,27 @@ vuejspython.start = function(wsurl, opt={}) {
     a = JSON.parse(a.data)
     var ws = new WebSocket(wsurl+'/');
     let computed = {...opt.computed}
-    let methods = {}
-    let watch = {}
+    let methods = {...opt.methods}
+    let watch = {...opt.watch}
+    let optdata = opt.data
+    let optel = opt.el || '#main'
+    for (let k of ['el', 'data', 'watch', 'methods', 'computed']) delete opt[k]
     let valuesWhere = {}
     for (let k in a.state) {
-      watch[k] = function (v, old) {
+      let watchk = function (v, old) {
         if (valuesWhere[k] == v) return
         delete valuesWhere[k]
         ws.send('UPDATE')
         ws.send(k)
         ws.send(v)
       }
+      if (watch[k] === undefined) {
+        watch[k] = watchk
+      } else {
+        let owk = watch[k]
+        watch[k] = function (...args) { watchk(...args); owk.bind(this)(...args) }
+      }
+
     }
     for (let k of a.methods) {
       methods[k] = function(...args) {
@@ -35,13 +46,15 @@ vuejspython.start = function(wsurl, opt={}) {
       }
     }
     let vm = new Vue({
-      el: '#main',
+      el: optel,
       data: () => ({
-        ...a.state
+        ...a.state,
+        ...optdata()
       }),
       computed,
       methods,
-      watch
+      watch,
+      ...opt,
     });
     ws.addEventListener('message', function(a) {
       a = a.data
@@ -54,5 +67,6 @@ vuejspython.start = function(wsurl, opt={}) {
         vm.$set(vm, k, v)
       }
     })
+    window.vuejspython_vm = vm // for console-based introspection
   });
 }
