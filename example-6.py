@@ -23,10 +23,10 @@ class Comp:
 
     def computed_xmin(self): return self.x.min()
     def computed_xmax(self): return self.x.max()
-    def computed_dx(self): return (self.x.max() - self.x.min()) / (np.sum(self.x.shape)-1)
+    def computed_dx(self): return (self.x.max() - self.x.min()) / (np.prod(self.x.shape)-1)
     def computed_ymin(self): return self.y.min()
     def computed_ymax(self): return self.y.max()
-    def computed_dy(self): return (self.y.max() - self.y.min()) / (np.sum(self.y.shape)-1)
+    def computed_dy(self): return (self.y.max() - self.y.min()) / (np.prod(self.y.shape)-1)
     def computed_d1m(self): return np.min( ((self.x-self.xm)**2 + (self.y-self.ym)**2)**0.5, axis=2)
     def computed_d1p(self): return np.min( ((self.x-self.xp)**2 + (self.y-self.yp)**2)**0.5, axis=2)
     def computed_im(self): return np.transpose(self.d1m / (self.d1p+.0001))
