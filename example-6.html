@@ -38,7 +38,12 @@
   <script src="vuejspython.js"></script>
   <script>
   vuejspython.start('localhost',
-      { // optionnal configuration object
+    {
+      data: () => ({
+        show_nn: true,
+        show_points: true,
+        gamma: 1.0,
+      }),
       mounted: function() { // vuejs life cycle
         this.showGraph()
       },

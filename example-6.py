@@ -10,9 +10,6 @@ import base64
 @model
 class Comp:
     # define properties to forward to vue (or not)
-    gamma = 1.0
-    show_points = True
-    show_nn = True
     im = np.zeros((1,))
     xp = np.zeros((1,))
     yp = np.zeros((1,))
