@@ -1,6 +1,6 @@
 
 import asyncio
-from vuejspython import model, start
+from vuejspython import model, start, atomic
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -31,14 +31,16 @@ class Comp:
     def computed_d1p(self): return np.min( ((self.x-self.xp)**2 + (self.y-self.yp)**2)**0.5, axis=2)
     def computed_im(self): return np.transpose(self.d1m / (self.d1p+.0001))
 
+    @atomic
     def draw_dataset(self):
-        self.x = np.linspace(-1.3, 1.3, 91)[:, None, None]
-        self.y = np.linspace(-0.87, 0.87, 103)[None, :, None]
+        self.x = np.linspace(-1.3, 1.3, 191)[:, None, None]
+        self.y = np.linspace(-0.87, 0.87, 203)[None, :, None]
         rangle = np.random.uniform(0, np.pi*4/3, (1, 1, 300))
         rradius = np.random.uniform(1, 1.7, rangle.shape)
         self.xm = rradius * np.cos(rangle)
         self.ym = rradius*4/6 * np.sin(rangle)
 
+    @atomic
     def draw_bonedataset(self, t='bone', N=300):
         x = np.linspace(-1.3, 1.3, 1000)[:,None]
         y = np.linspace(-0.6, 0.6, 600)[None,:]
@@ -53,11 +55,14 @@ class Comp:
         self.xm = x[None,None,candx[candind],0]
         self.ym = y[None,None,0,candy[candind]]
 
+    @atomic
     def draw_set2pluses(self):
         self.xp = np.array([0, 0.75])[None,None,:]
         self.yp = np.array([0, 0])[None,None,:]
 
+    @atomic
     def draw_somepluses(self, N=20):
         self.xp = np.random.uniform(self.xmin, self.xmax, (1,1,N))
         self.yp = np.random.uniform(self.ymin, self.ymax, (1,1,N))
+
 start(Comp())
