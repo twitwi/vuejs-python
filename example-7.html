@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Vue-Python sample 7 (slicing demo)</title>
+  <script src="lib/vue.js"></script>
+  <link rel="stylesheet" href="lib/picnic.min.css" />
+  <style>
+  body { padding: 1em; }
+
+  table { font-size: 13px; border: 1px solid black; border-collapse: collapse;; }
+  td { text-align: center; }
+  td:nth-child(n+2) { padding: .1em .1em; min-width: 2em; }
+  .indices {font-family: monospace; font-size: 75%;}
+
+  .values td:nth-child(n+2) { background: rgba(calc(255 * var(--value)), 255, 0, var(--value))}
+  .values td:nth-child(n+2) { border-bottom: 3px solid white; }
+  .values td:nth-child(n+2).picked, input.picked { border-bottom: 3px solid blue !important;}
+  </style>
+</head>
+<body>
+
+    <div id="main">
+    <p>
+        This example is a real use case to teach slicing.
+    </p>
+
+    <p>
+    Enter a list expression: <input v-model="input_expr" placeholder="list(range(40, 70))"/>
+    </p>
+
+    <code><pre>
+>>> {{i_name}} = {{input_expr}}
+>>> print({{i_name}})
+[{{input.join(', ')}}]</pre></code>
+
+    <h3>Input <code>{{ i_name }}</code></h3>
+    <table>
+      <tr class="indices">
+        <td>Indices</td>
+        <td v-for="v,i in input">{{i}}</td>
+        <td/>
+      </tr>
+      <tr class="values">
+        <td>Values</td>
+        <td v-for="v,i in input" :class="{picked: isPicked(v)}" :style="{'--value': tdValue(v)}">{{v}}</td>
+      </tr>
+      <tr class="indices">
+        <td>Negative indices</td>
+        <td v-for="v,i in input">{{-input.length + i}}</td>
+      </tr>
+    </table>
+    {{input}}
+
+    <p>
+    Now, enter slice expression: <input v-model="slice_expr" class="picked"/>
+    </p>
+
+    <code><pre>
+>>> {{i_name}} = {{input_expr}}
+>>> {{o_name}} = {{i_name}}[{{slice_expr}}]
+>>> print({{o_name}})
+{{is_error ? '..... the expression caused an error... no print' : outputAsStr }}
+{{is_error ? error_message : ''}}</pre></code>
+
+    <h3>Output <code>{{o_name}}</code>, after running <code>{{o_name}} = {{i_name}}[{{slice_expr}}]</code></h3>
+    <table v-if="output.join !== undefined">
+      <tr class="indices">
+        <td>Indices</td>
+        <td v-for="v,i in output">{{i}}</td>
+        <td/>
+      </tr>
+      <tr class="values">
+        <td>Values</td>
+        <td v-for="v,i in output" class="picked" :style="{'--value': tdValue(v)}">{{v}}</td>
+      </tr>
+      <tr class="indices">
+        <td>Negative indices</td>
+        <td v-for="v,i in output">{{-output.length + i}}</td>
+      </tr>
+    </table>
+    {{ output }}
+  </div>
+
+  <script src="vuejspython.js"></script>
+  <script>
+  vuejspython.start('localhost', {
+    computed:  {
+      minValue() {
+        return Math.min(...this.input)
+      },
+      maxValue() {
+        return Math.max(...this.input)
+      },
+      outputAsStr () {
+        let o = this.output
+        return o.join === undefined ? o : '['+o.join(', ')+']'
+      }
+    },
+    methods: {
+      tdValue (v) {
+        return (v - this.minValue) / (this.maxValue - this.minValue + 0.000001)
+      },
+      isPicked (v) {
+        if (this.output === v) return true
+        if (this.output.indexOf === undefined) return false
+        return this.output.indexOf(v) !== -1
+      }
+    }
+  })
+  </script>
+</body>
+</html>
