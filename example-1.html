@@ -21,7 +21,7 @@
     That state is automatically useable and synchronized in the browser (in Vue.js):
     <ul>
       <li>It can be used to print, e.g.: i = {{ i }} and i² = {{ i*i }}</li>
-      <li>Or as the model for a text field that can be modified, e.g., <input v-model="i"></input></li>
+      <li>Or as the model for a text field that can be modified, e.g., <input v-model.number="i"></input></li>
       <li>Or as the value for a read only element, e.g.,<br/>
         <progress style="width: 500px" max="100" :value="i"></progress><br/>
         <meter style="width: 500px" max="100" :value="i" low="33" high="66" optimum="10"></meter></li>

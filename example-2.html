@@ -19,6 +19,7 @@
 
   <div id="main">
 
+
     <button @click="currentClass -= 1">«</button>
     <button @click="currentClass += 1">»</button>
     Current class: <input v-model.number="currentClass" ></input>
@@ -33,7 +34,7 @@
     <h5>class {{currentClass}} - max(others)  (bottom)</h5>
 
     <hr/>
-    <img :src="currentImage"></img>
+    <img :src="currentImage" alt="WARNING: this example requires some private data"></img>
   </div>
 
   <script src="vuejspython.js"></script>

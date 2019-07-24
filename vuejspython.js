@@ -28,7 +28,7 @@ vuejspython.start = function(wsurl, opt={}) {
         delete valuesWhere[k]
         ws.send('UPDATE')
         ws.send(k)
-        ws.send(v)
+        ws.send(JSON.stringify(v))
       }
       if (watch[k] === undefined) {
         watch[k] = watchk
