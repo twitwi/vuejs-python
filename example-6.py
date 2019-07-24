@@ -5,7 +5,6 @@ from vuejspython import model, start, atomic
 import numpy as np
 import matplotlib.pyplot as plt
 import io
-import base64
 
 @model
 class Comp:
