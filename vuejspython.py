@@ -8,8 +8,8 @@ PREFIX = {
     'IN':  '🢀║ ',
     'OUT': ' ║🢂',
     'END': '╚╩╝',
-    'ERR': '   ⚠⚠⚠',
-    'def': '   ►►►',
+    'ERR': ' │ ⚠⚠⚠',
+    'def': ' │ ►►►',
 }
 infos = ('DEPS'+' IN OUT END ERR').split()
 def info(k, *args, **kwargs):
