@@ -12,6 +12,7 @@
   td { text-align: center; }
   td:nth-child(n+2) { padding: .1em .1em; min-width: 2em; }
   .indices {font-family: monospace; font-size: 75%;}
+  .negative.indices {color: darkgrey;}
 
   .values td:nth-child(n+2) { background: rgba(calc(255 * var(--value)), 255, 0, var(--value))}
   .values td:nth-child(n+2) { border-bottom: 3px solid white; }
@@ -45,7 +46,7 @@
         <td>Values</td>
         <td v-for="v,i in input" :class="{picked: isPicked(v)}" :style="{'--value': tdValue(v)}">{{v}}</td>
       </tr>
-      <tr class="indices">
+      <tr class="negative indices">
         <td>Negative indices</td>
         <td v-for="v,i in input">{{-input.length + i}}</td>
       </tr>
@@ -74,7 +75,7 @@
         <td>Values</td>
         <td v-for="v,i in output" class="picked" :style="{'--value': tdValue(v)}">{{v}}</td>
       </tr>
-      <tr class="indices">
+      <tr class="negative indices">
         <td>Negative indices</td>
         <td v-for="v,i in output">{{-output.length + i}}</td>
       </tr>

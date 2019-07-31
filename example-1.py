@@ -19,11 +19,11 @@ class Comp:
         asyncio.ensure_future(self.demo_incr(2, 3))
 
     def watch_i(self, i):
-        print("UPDATING i2_withwatch")
+        print("TEST: UPDATING i2_withwatch")
         self.i2_withwatch = i*i
 
     def computed_i2(self):
-        print("COMPUTING i2")
+        print("TEST: COMPUTING i2")
         return self.i**2
 
     async def demo_incr(self, t, v):
@@ -32,13 +32,13 @@ class Comp:
             self.i += v
 
     def meth1(self, v):
-        print("COMMAND", v)
+        print("TEST: COMMAND", v)
         self.subtitle = "Changed: "+v # will not trigger change as _novue
         if v == '+1':
             self.i += 1
 
     def clone(self, v):
-        print("CLONE", type(self.suggestions))
+        print("TEST: CLONE", type(self.suggestions))
         self.suggestions += [v]
 
 vuejspython.start(Comp())
