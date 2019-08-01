@@ -4,6 +4,9 @@ import websockets
 import json
 from observablecollections.observablelist import ObservableList
 
+g_components = {}
+g_instances = {}
+
 PREFIX = {
     'IN':  '🢀║ ',
     'OUT': ' ║🢂',
@@ -103,6 +106,7 @@ def field_should_be_synced(cls):
 
 # class annotation
 def model(cls):
+    g_components[cls.__name__] = cls
     prefix = 'computed_'
     novue = cls._v_novue if hasattr(cls, '_v_novue') else []
     cls._v_nobroadcast = cls._v_nobroadcast if hasattr(cls, '_v_nobroadcast') else []
@@ -143,10 +147,28 @@ async def broadcast_update(k, v):
         except:
             pass
 
-def handleClient(o):
+def handleClient():
     async def handleClient(websocket, path):
-        if path == '/init':
-            clss = type(o)
+        print("PATH", path)
+        if path == '/init' or path.startswith('/init:'):
+            if path == '/init':
+                o = g_instances['ROOT']
+                clss = type(o)
+            else:
+                parts = path.split(':')
+                clss = g_components[parts[1]]
+                id = int(parts[2])
+                o = clss()
+                setattr(o, '__id', id)
+                print("BLKC RCV")
+                data = await websocket.recv()
+                info('IN', 'PROPS', data)
+                data = json.loads(data)
+                for k in data:
+                    setattr(o, k, '')
+                setup_model_object_infra(o)
+                g_instances[id] = o
+                print(g_instances)
             state = {}
             methods = []
             for k in filter(field_should_be_synced(clss), dir(clss)):
@@ -159,23 +181,32 @@ def handleClient(o):
                 'state': state,
                 'methods': methods
             }
-            info('OUT', 'INIT', list(state.keys()))
+            info('OUT', 'INIT', clss.__name__, list(state.keys()))
             await websocket.send(json.dumps(to_send))
         else:
             all.append(websocket)
             try:
                 while True:
                     comm = await websocket.recv()
-                    if comm == 'CALL':
+                    if comm == 'CALL' or comm.startswith('CALL:'):
+                        if comm == 'CALL':
+                            o = g_instances['ROOT']
+                        else:
+                            o = g_instances[comm.split(':')[1]]
                         meth = await websocket.recv()
                         info('IN', 'METH', meth)
                         data = await websocket.recv()
                         info('IN', 'DATA', data)
                         try:
+                            ###############
                             res = getattr(o, meth)(*json.loads(data))
                         except Exception as inst:
                             info('ERR', '... exception while calling method:', inst)
-                    elif comm == 'UPDATE':
+                    if comm == 'UPDATE' or comm.startswith('UPDATE:'):
+                        if comm == 'UPDATE':
+                            o = g_instances['ROOT']
+                        else:
+                            o = g_instances[comm.split(':')[1]]
                         k = await websocket.recv()
                         v = await websocket.recv()
                         info('IN', 'UPDATE', k, v)
@@ -200,8 +231,7 @@ def atomic(f):
         recompute_scheduled_computed(self)
     return _decorator
 
-
-def start(o, port=4259, host='localhost'):
+def setup_model_object_infra(o):
     cls = o.__class__
     o._v_cache = {}
     o._v_currently_computing = []
@@ -216,7 +246,13 @@ def start(o, port=4259, host='localhost'):
         o._v_deps[k] = []
     for k in o._v_computed.keys():
         recompute_computed(o, k)
+
+
+def start(o, port=4259, host='localhost'):
+    g_instances['ROOT'] = o
+    setattr(o, '__id', 'ROOT')
+    setup_model_object_infra(o)
     #inreader = asyncio.StreamReader(sys.stdin)
-    ws_server = websockets.serve(handleClient(o), host, port)
+    ws_server = websockets.serve(handleClient(), host, port)
     asyncio.ensure_future(ws_server)
     asyncio.get_event_loop().run_forever()
