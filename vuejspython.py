@@ -4,6 +4,7 @@ import websockets
 import json
 from observablecollections.observablelist import ObservableList
 import traceback
+from collections import defaultdict
 
 g_components = {}
 g_instances = {}
@@ -156,11 +157,11 @@ def call_watcher(o, k):
         if callable(watcher):
             watcher(getattr(o, k))
 
-all = []
+all = defaultdict(lambda: set([]))
 KEY_ATOMIC = '_v_ATOMIC'
 async def broadcast_update(id, k, v):
-    a = all.copy()
-    all[:] = []
+    a = all[id].copy()
+    all[id].clear()
     if k == KEY_ATOMIC:
         comm = 'ATOMIC'
     else:
@@ -170,7 +171,7 @@ async def broadcast_update(id, k, v):
             v = sanitize(v)
             await ws.send(comm+' '+str(id)+' '+str(k)+' '+json.dumps(v))
             info('OUT', comm, id, k, '{:.80} ...'.format(json.dumps(v)))
-            all.append(ws)
+            all[id].add(ws)
         except:
             pass
 
@@ -181,9 +182,7 @@ def handleClient():
         return str(_previd[0])
 
     async def handleClient(websocket, path):
-        # TODO: these all should be per-id? to avoid unncessary calls?
         # TODO: cleanup g_instances (on socket disconnect at least)
-        all.append(websocket)
         try:
             while True:
                 comm = await websocket.recv()
@@ -191,6 +190,7 @@ def handleClient():
                     clss_name = await websocket.recv()
                     info('IN', comm, clss_name)
                     if clss_name == 'ROOT':
+                        all[clss_name].add(websocket)
                         id = clss_name
                         o = g_instances[id]
                         clss = type(o)
@@ -201,6 +201,7 @@ def handleClient():
                         clss = g_components[clss_name]
                         o = clss()
                         id = next_instance_id()
+                        all[id].add(websocket)
                         setattr(o, '__id', id)
                         setup_model_object_infra(o)
                         g_instances[id] = o
