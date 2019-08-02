@@ -96,6 +96,7 @@ def recompute_scheduled_computed(o):
     if not hasattr(o, '_v_schedule_recomputing') or len(o._v_schedule_recomputing) == 0: return
     tocomp = o._v_schedule_recomputing
     o._v_schedule_recomputing = []
+
     for k in tocomp:
         recompute_computed(o, k)
     recompute_scheduled_computed(o)
@@ -144,6 +145,10 @@ def broadcast(self, k):
     if k in self._v_nobroadcast: return
     asyncio.ensure_future(broadcast_update(self.__id, k, getattr(self, k)))
 
+def broadcast_atomic(self, start):
+    if not hasattr(self, '__id'): return # no id yet, still building
+    asyncio.ensure_future(broadcast_update(self.__id, KEY_ATOMIC, start))
+
 def call_watcher(o, k):
     watcher = 'watch_'+k
     if hasattr(o, watcher):
@@ -152,14 +157,19 @@ def call_watcher(o, k):
             watcher(getattr(o, k))
 
 all = []
+KEY_ATOMIC = '_v_ATOMIC'
 async def broadcast_update(id, k, v):
     a = all.copy()
     all[:] = []
+    if k == KEY_ATOMIC:
+        comm = 'ATOMIC'
+    else:
+        comm = 'UPDATE'
     for ws in a:
         try:
             v = sanitize(v)
-            await ws.send('UPDATE '+str(id)+' '+str(k)+' '+json.dumps(v))
-            info('OUT', 'UPDATE', id, k, '{:.80} ...'.format(json.dumps(v)))
+            await ws.send(comm+' '+str(id)+' '+str(k)+' '+json.dumps(v))
+            info('OUT', comm, id, k, '{:.80} ...'.format(json.dumps(v)))
             all.append(ws)
         except:
             pass
@@ -225,8 +235,9 @@ def handleClient():
                         'state': state,
                         'methods': methods
                     }
-                    info('OUT', comm, to_send)
-                    await websocket.send(comm + ' ' + json.dumps(to_send))
+                    to_send = json.dumps(to_send)
+                    info('OUT', comm, '{:.80} ...'.format(to_send))
+                    await websocket.send(comm + ' ' + to_send)
                 elif comm == 'CALL':
                     id = await websocket.recv()
                     o = g_instances[id]
@@ -268,10 +279,12 @@ def handleClient():
 # decorator
 def atomic(f):
     def _decorator(self, *args, **kwargs):
-        self._v_just_schedule = True
+        self._v_just_schedule = True # for the python to wait
+        broadcast_atomic(self, True) # for the js to wait
         f(self, *args, **kwargs)
         self._v_just_schedule = False
         recompute_scheduled_computed(self)
+        broadcast_atomic(self, False)
     return _decorator
 
 def setup_model_object_infra(o):

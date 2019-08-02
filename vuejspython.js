@@ -14,6 +14,8 @@ vuejspython.start = function(wsurl, opt={}) {
   }
   vuejspython.wsurl = wsurl
   var ws = new WebSocket(wsurl)
+  let atomic = false
+  let toApply = {}
   let valuesWhere = {}
   let vm = null
   ws.addEventListener('open', function(a) {
@@ -45,7 +47,6 @@ vuejspython.start = function(wsurl, opt={}) {
           let owk = watch[k]
           watch[k] = function (...args) { watchk(...args); owk.bind(this)(...args) }
         }
-
       }
       for (let k of a.methods) {
         methods[k] = function(...args) {
@@ -67,6 +68,28 @@ vuejspython.start = function(wsurl, opt={}) {
         ...opt,
       })
       window.vuejspython_vm = vm // for console-based introspection
+      // TODO: ATOMIC also for the components
+    } else if (a.startsWith('ATOMIC ')) {
+      let parts = a.split(' ')
+      let upid = parts[1]
+      // let k = parts[2] '_v_ATOMIC'
+      let setAtomic = JSON.parse(parts[3])
+      if (upid === 'ROOT') {
+        if (!atomic && setAtomic) {
+          atomic = true
+          toApply = {}
+        } else if (atomic && !setAtomic) {
+          atomic = false
+          for (let k in toApply) {
+            let v = toApply[k]
+            valuesWhere[k] = v
+            vm.$set(vm, k, v)
+          }
+          toApply = {}
+        } else {
+          console.log('INCOHERENT atomic STATE', atomic, setAtomic)
+        }
+      }
     } else if (a.startsWith('UPDATE ')) {
       let parts = a.split(' ', 3)
       let upid = parts[1]
@@ -74,8 +97,12 @@ vuejspython.start = function(wsurl, opt={}) {
       if (upid === 'ROOT') {
         let v = a.substr(parts.join(' ').length)
         v = JSON.parse(v)
-        valuesWhere[k] = v
-        vm.$set(vm, k, v)
+        if (atomic) {
+          toApply[k] = v
+        } else {
+          valuesWhere[k] = v
+          vm.$set(vm, k, v)
+        }
       }
     }
   })
