@@ -14,6 +14,7 @@ vuejspython.start = function(wsurl, opt={}) {
   }
   vuejspython.wsurl = wsurl
   var ws = new WebSocket(wsurl)
+  let calls = {}
   let atomic = false
   let toApply = {}
   let valuesWhere = {}
@@ -24,6 +25,9 @@ vuejspython.start = function(wsurl, opt={}) {
   })
   ws.addEventListener('message', function(a) {
     a = a.data
+    if (Object.keys(calls).length > 5) {
+      console.log('PROBABLY MISSING RETURN FOR METHOD CALLS', Object.keys(calls).length, 'PENDING')
+    }
     if (a.startsWith('INIT ')) {
       a = JSON.parse(a.substr('INIT '.length))
       let computed = {...opt.computed}
@@ -49,11 +53,16 @@ vuejspython.start = function(wsurl, opt={}) {
         }
       }
       for (let k of a.methods) {
-        methods[k] = function(...args) {
-          ws.send('CALL')
-          ws.send('ROOT')
-          ws.send(k)
-          ws.send(JSON.stringify(args))
+        methods[k] = async function(...args) {
+          return new Promise(function (resolve, reject) {
+            ws.send('CALL')
+            ws.send('ROOT')
+            let callId = (Math.random()*1000).toString().replace(/\./, '')
+            calls[callId] = {resolve, reject}
+            ws.send(callId)
+            ws.send(k)
+            ws.send(JSON.stringify(args))
+          })
         }
       }
       vm = new Vue({
@@ -68,8 +77,16 @@ vuejspython.start = function(wsurl, opt={}) {
         ...opt,
       })
       window.vuejspython_vm = vm // for console-based introspection
-      // TODO: ATOMIC also for the components
+    } else if (a.startsWith('RETURN ')) {
+      let parts = a.split(' ', 2)
+      let callId = parts[1]
+      if (calls[callId] !== undefined) {
+        let v = JSON.parse(a.substr(parts.join(' ').length))
+        calls[callId].resolve(v)
+        delete calls[callId]
+      }
     } else if (a.startsWith('ATOMIC ')) {
+      // TODO: ATOMIC also for the components
       let parts = a.split(' ')
       let upid = parts[1]
       // let k = parts[2] '_v_ATOMIC'

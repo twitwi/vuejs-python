@@ -14,6 +14,10 @@
   <div id="main">
 
     <h3>{{ title }}</h3>
+    <a @click="titleReverse2()" class="button">swap</a>
+    <!--a @click="title = meth3(title)" class="button">swap</a-->
+    <a @click="titleReverse3()" class="button">swap</a> <!-- all methods are async -->
+    <br/>
 
     We can have a state in Python which is a counter "i".
     The Python side automatically adds 3 to the counter every few seconds. <br/>
@@ -45,7 +49,6 @@
     Here is a button that modifies the list of buttons, as a test...
     <a @click="clone('more...')" class="button">+clone</a>
 
-
   </div>
 
   <script src="vuejspython.js"></script>
@@ -56,6 +59,15 @@
         i2_injs: function () {
           return this.i * this.i
         }
+      },
+      methods: {
+        async titleReverse2 () { // to my knowledge, we cannot do await directly in @click
+          this.title = await this.meth2(this.title)
+        },
+        async titleReverse3 () { // to my knowledge, we cannot do await directly in @click
+          this.title = await this.meth3(this.title)
+          //           ^^^^^ async even if in pyton it is a non-async method
+        },
       }
     })
   // ^ TODO: maybe handle startup callbacks

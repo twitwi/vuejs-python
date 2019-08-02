@@ -193,7 +193,6 @@ def handleClient():
                     del all[inited]
         try:
             while True:
-                print({k:len(all[k]) for k in all})
                 comm = await websocket.recv()
                 if comm == 'INIT' or comm == 'INFO':
                     clss_name = await websocket.recv()
@@ -255,13 +254,26 @@ def handleClient():
                 elif comm == 'CALL':
                     id = await websocket.recv()
                     o = g_instances[id]
+                    call_id = await websocket.recv()
+                    info('IN', 'CALL_ID', call_id)
                     meth = await websocket.recv()
                     info('IN', 'METH', meth)
                     data = await websocket.recv()
                     info('IN', 'DATA', data)
                     try:
-                        ###############
-                        res = getattr(o, meth)(*json.loads(data))
+                        method_call = getattr(o, meth)(*json.loads(data))
+                        # local block scope
+                        async def local(method_call, call_id):
+                            async def on_return(res):
+                                info('OUT', '{:.80} ...'.format('RETURN %s %s'%(call_id, json.dumps(res))))
+                                await websocket.send('RETURN %s %s'%(call_id, json.dumps(res)))
+
+                            if type(method_call).__name__ == 'coroutine':
+                                task = asyncio.ensure_future(method_call)
+                                task.add_done_callback(lambda t: asyncio.ensure_future(on_return(t.result())))
+                            else:
+                                await on_return(method_call)
+                        await local(method_call, call_id)
                     except Exception as inst:
                         info('ERR', 'Exception while calling method:', inst)
                         info_exception('ERR', '  ')

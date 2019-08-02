@@ -37,6 +37,13 @@ class Comp:
         if v == '+1':
             self.i += 1
 
+    async def meth2(self, v):
+        await asyncio.sleep(1)
+        return str(v[::-1])
+
+    def meth3(self, v):
+        return str(v[::-1])
+
     def clone(self, v):
         print("TEST: CLONE", type(self.suggestions))
         self.suggestions += [v]
