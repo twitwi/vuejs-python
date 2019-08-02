@@ -157,7 +157,7 @@ def call_watcher(o, k):
         if callable(watcher):
             watcher(getattr(o, k))
 
-all = defaultdict(lambda: set([]))
+all = defaultdict(lambda: set())
 KEY_ATOMIC = '_v_ATOMIC'
 async def broadcast_update(id, k, v):
     a = all[id].copy()
@@ -182,16 +182,28 @@ def handleClient():
         return str(_previd[0])
 
     async def handleClient(websocket, path):
-        # TODO: cleanup g_instances (on socket disconnect at least)
+        inited = None
+        def cleanup():
+            if inited is None: return
+            if id != 'ROOT' and id in g_instances:
+                del g_instances[id]
+            if websocket in all[inited]:
+                all[inited].remove(websocket)
+                if len(all[inited]) == 0:
+                    del all[inited]
         try:
             while True:
+                print({k:len(all[k]) for k in all})
                 comm = await websocket.recv()
                 if comm == 'INIT' or comm == 'INFO':
                     clss_name = await websocket.recv()
+                    if inited is not None:
+                        info('ERR', 'Tentative double init/info', clss_name)
                     info('IN', comm, clss_name)
                     if clss_name == 'ROOT':
-                        all[clss_name].add(websocket)
                         id = clss_name
+                        all[id].add(websocket)
+                        inited = id
                         o = g_instances[id]
                         clss = type(o)
                         o._v_just_schedule = False
@@ -202,6 +214,7 @@ def handleClient():
                         o = clss()
                         id = next_instance_id()
                         all[id].add(websocket)
+                        inited = id
                         setattr(o, '__id', id)
                         setup_model_object_infra(o)
                         g_instances[id] = o
@@ -265,6 +278,7 @@ def handleClient():
                         info('ERR', 'Not a JSON value (or watcher error) for key', k, '->', v, '//', e)
                         info_exception('ERR', '  ')
         except websockets.ConnectionClosed as e:
+            cleanup()
             if e.code == 1001:
                 info('END', 'disconnected')
             elif e.code == 1005:
@@ -273,6 +287,7 @@ def handleClient():
                 info('END', e)
                 info_exception('ENDx')
         except Exception as e:
+            cleanup()
             info('END', e)
             info_exception('ENDe')
     return handleClient
