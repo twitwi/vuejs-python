@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Vue-Python sample 3</title>
+  <title>Vue-Python sample 8</title>
   <script src="lib/vue.js"></script>
   <link rel="stylesheet" href="lib/picnic.min.css" />
   <style>
@@ -14,14 +14,16 @@
     <p>
         This example explores having custom components.
     </p>
-    i: {{ i }} <button @click="incr(1)">+</button><button @click="incr(-1)">-</button><br/>
+    i: {{ i }} <button @click="incr(1)">+</button><button @click="incr(-1)">-</button>
+     -> {{ sqrd }} (py-computed value, in the application)<br/>
     <input v-model.number="i"/>
     <progress style="width: 500px" max="100" :value="i"></progress>
     <my-show :val="i" pre="my-show 1:"></my-show>
     <my-show :val="i" pre="my-show 2:"></my-show>
     <my-dummy></my-dummy>
     <my-dummy></my-dummy>
-    <!--my-square :val="i" pre="my-square 2:"></my-square-->
+    <my-square :val="i" pre="my-square 1:"></my-square>
+    <my-square :val="i" pre="my-square 2:"></my-square>
   </div>
 
   <script src="vuejspython.js"></script>
@@ -29,15 +31,19 @@
   /* plain vuejs component */
   Vue.component('my-show', {
     props: ['val', 'pre'],
-    template: '<div> {{pre}} {{val}}</div>'
+    template: '<div> {{pre}} {{val}} -> {{val**2}} (in the pure-js template)</div>'
   })
   /* vuejspython component */
   vuejspython.component('Dummy', 'my-dummy', {
-    template: '<div> {{i}} <button @click="incr(1)">+</button></div>'
+    template: '<div> {{i}} <button @click="incr(1)">+</button> -> {{i**2}} (in the vjspy template)</div>',
+    beforeCreate: () => {console.log("beforeCreate")},
+    created: () => {console.log("created")},
+    data: () => ({i:parseInt(Math.random()*100)})
   })
   vuejspython.component('Square', 'my-square', {
     props: ['val', 'pre'],
-    template: '<div> {{pre}} {{val}} -> {{square}}</div>'
+    template: '<div> {{pre}} {{val}} -> {{square}} (py-computed value, in the component)</div>',
+    data: () => ({})
   })
   vuejspython.start('localhost')
   </script>

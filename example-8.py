@@ -12,17 +12,22 @@ class Comp:
     def __init__(self):
         self.i = 1
 
+    def computed_sqrd(self):
+        return self.i ** 2
+
     def incr(self, d):
         self.i += d
 
 @model
 class Dummy:
-    i = 12
+    i = 3
     def incr(self, d):
         self.i += d
 
 @model
 class Square:
+    val = 0 # prop
+
     def computed_square(self):
         return self.val ** 2
 

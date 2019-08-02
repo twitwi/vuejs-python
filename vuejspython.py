@@ -124,8 +124,11 @@ def model(cls):
 
 
 def broadcast(self, k):
+    print("BCAST", hasattr(self, '__id'), k)
+    if not hasattr(self, '__id'): return # no id yet, still building
     if k in self._v_nobroadcast: return
-    asyncio.ensure_future(broadcast_update(k, getattr(self, k)))
+    print("     ", self.__id, k, getattr(self, k))
+    asyncio.ensure_future(broadcast_update(self.__id, k, getattr(self, k)))
 
 def call_watcher(o, k):
     watcher = 'watch_'+k
@@ -135,91 +138,98 @@ def call_watcher(o, k):
             watcher(getattr(o, k))
 
 all = []
-async def broadcast_update(k, v):
+async def broadcast_update(id, k, v):
     a = all.copy()
     all[:] = []
     for ws in a:
         try:
             v = sanitize(v)
-            await ws.send('UPDATE '+str(k)+' '+json.dumps(v))
-            info('OUT', 'UPDATE', k, '{:.80} ...'.format(json.dumps(v)))
+            await ws.send('UPDATE '+str(id)+' '+str(k)+' '+json.dumps(v))
+            info('OUT', 'UPDATE', id, k, '{:.80} ...'.format(json.dumps(v)))
             all.append(ws)
         except:
             pass
 
 def handleClient():
+    _previd = [0]
+    def next_instance_id():
+        _previd[0] += 1
+        return str(_previd[0])
+
     async def handleClient(websocket, path):
-        print("PATH", path)
-        if path == '/init' or path.startswith('/init:'):
-            if path == '/init':
-                o = g_instances['ROOT']
-                clss = type(o)
-            else:
-                parts = path.split(':')
-                clss = g_components[parts[1]]
-                id = int(parts[2])
-                o = clss()
-                setattr(o, '__id', id)
-                print("BLKC RCV")
-                data = await websocket.recv()
-                info('IN', 'PROPS', data)
-                data = json.loads(data)
-                for k in data:
-                    setattr(o, k, '')
-                setup_model_object_infra(o)
-                g_instances[id] = o
-                print(g_instances)
-            state = {}
-            methods = []
-            for k in filter(field_should_be_synced(clss), dir(clss)):
-                if callable(getattr(o, k)):
-                    methods.append(k)
-                else:
-                    state[k] = getattr(o, k)
-                    state[k] = sanitize(state[k])
-            to_send = {
-                'state': state,
-                'methods': methods
-            }
-            info('OUT', 'INIT', clss.__name__, list(state.keys()))
-            await websocket.send(json.dumps(to_send))
-        else:
-            all.append(websocket)
-            try:
-                while True:
-                    comm = await websocket.recv()
-                    if comm == 'CALL' or comm.startswith('CALL:'):
-                        if comm == 'CALL':
-                            o = g_instances['ROOT']
-                        else:
-                            o = g_instances[comm.split(':')[1]]
-                        meth = await websocket.recv()
-                        info('IN', 'METH', meth)
+        # TODO: these all should be per-id? to avoid unncessary calls?
+        all.append(websocket)
+        try:
+            while True:
+                comm = await websocket.recv()
+                print("COMM", comm)
+                if comm == 'INIT':
+                    clss_name = await websocket.recv()
+                    print("CLASS NAME", clss_name)
+                    if clss_name == 'ROOT':
+                        id = clss_name
+                        o = g_instances[id]
+                        clss = type(o)
+                    elif clss_name not in g_components:
+                        info('ERR', 'Component type ' + clss_name + ' not found (missing @model?).')
+                    else:
+                        clss = g_components[clss_name]
+                        o = clss()
+                        id = next_instance_id()
+                        setattr(o, '__id', id)
+                        setup_model_object_infra(o)
                         data = await websocket.recv()
-                        info('IN', 'DATA', data)
-                        try:
-                            ###############
-                            res = getattr(o, meth)(*json.loads(data))
-                        except Exception as inst:
-                            info('ERR', '... exception while calling method:', inst)
-                    if comm == 'UPDATE' or comm.startswith('UPDATE:'):
-                        if comm == 'UPDATE':
-                            o = g_instances['ROOT']
+                        info('IN', 'PROPS', data)
+                        data = json.loads(data)
+                        for k in data:
+                            setattr(o, k, '')
+                        setup_model_object_infra(o)
+                        g_instances[id] = o
+                    state = {}
+                    methods = []
+                    for k in filter(field_should_be_synced(clss), dir(clss)):
+                        if callable(getattr(o, k)):
+                            methods.append(k)
                         else:
-                            o = g_instances[comm.split(':')[1]]
-                        k = await websocket.recv()
-                        v = await websocket.recv()
-                        info('IN', 'UPDATE', k, v)
-                        try:
-                            setattr(o, k, json.loads(v))
-                            call_watcher(o, k)
-                        except Exception as e:
-                            info('ERR', 'Not a JSON value (or watcher error) for key', k, '->', v, '//', e)
-                            import traceback
-                            traceback.print_exc()
-            except:
-                info('END', 'websocket disconnected')
-                pass # disconnected
+                            state[k] = getattr(o, k)
+                            state[k] = sanitize(state[k])
+                    to_send = {
+                        'id': id,
+                        'state': state,
+                        'methods': methods
+                    }
+                    info('OUT', 'INIT', clss.__name__, id, list(state.keys()))
+                    await websocket.send('INIT ' + json.dumps(to_send))
+                elif comm == 'CALL':
+                    id = await websocket.recv()
+                    print(type(id), id)
+                    o = g_instances[id]
+                    print(o)
+                    meth = await websocket.recv()
+                    info('IN', 'METH', meth)
+                    data = await websocket.recv()
+                    info('IN', 'DATA', data)
+                    try:
+                        ###############
+                        res = getattr(o, meth)(*json.loads(data))
+                    except Exception as inst:
+                        info('ERR', '... exception while calling method:', inst)
+                elif comm == 'UPDATE':
+                    id = await websocket.recv()
+                    o = g_instances[id]
+                    k = await websocket.recv()
+                    v = await websocket.recv()
+                    info('IN', 'UPDATE', k, v)
+                    try:
+                        setattr(o, k, json.loads(v))
+                        call_watcher(o, k)
+                    except Exception as e:
+                        info('ERR', 'Not a JSON value (or watcher error) for key', k, '->', v, '//', e)
+                        import traceback
+                        traceback.print_exc()
+        except:
+            info('END', 'websocket disconnected')
+            pass # disconnected
     return handleClient
 
 # decorator
