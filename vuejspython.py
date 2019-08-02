@@ -3,23 +3,34 @@ import asyncio
 import websockets
 import json
 from observablecollections.observablelist import ObservableList
+import traceback
 
 g_components = {}
 g_instances = {}
 
 PREFIX = {
-    'IN':  '🢀║ ',
-    'OUT': ' ║🢂',
-    'END': '╚╩╝',
-    'ERR': ' │ ⚠⚠⚠',
-    'def': ' │ ►►►',
+    'IN':   '🢀║   IN',
+    'OUT':  ' ║🢂 OUT',
+    'END':  '╚╩╝',
+    'ENDx': '    ..',
+    'ENDe': '    ⚠⚠',
+    'ERR':  ' │ ⚠⚠⚠⚠⚠⚠',
+    'def':  ' │ ►►►%s►►►',
 }
-infos = ('DEPS'+' IN OUT END ERR').split()
+# list of enabled logging
+infos = ('DEPS ENDx ENDe'+' IN OUT END ERR').split()
 def info(k, *args, **kwargs):
     if k in infos:
-        pre = PREFIX['def']
-        if k in PREFIX.keys(): pre = PREFIX[k]
-        print('      ', pre, k, *args, **kwargs)
+        if k in PREFIX.keys():
+            pre = PREFIX[k]
+        else:
+            pre = PREFIX['def']%(k,)
+        print('      ', pre, *args, **kwargs)
+
+def info_exception(k, pre=''):
+    for l in traceback.format_exc().split('\n'):
+        info(k, pre + l)
+
 
 def is_ndarray(a):
     try:
@@ -40,18 +51,19 @@ def cache_stale(cache, k, v):
         return (v != cache[k]).any()
     return cache[k] != v
 
-def make_prop(k):
+def make_prop(k, no_broadcast):
     f = '_'+k
     def get(o):
         if hasattr(o, '_v_currently_computing') and o._v_currently_computing != []: # may be triggered before "start" (in __init__)
             o._v_deps[o._v_currently_computing[-1]].append(k)
-            info("DEPS", o._v_deps)
+            info('DEPS', o._v_deps)
         return getattr(o, f)
     def set(o, v):
         def trigger_on_change(*args):
             call_watcher(o, k)
             update_computed_depending_on(o, k)
-            broadcast(o, k)
+            if not no_broadcast:
+                broadcast(o, k)
         if type(v) == list:
             v = ObservableList(v)
             v.attach(trigger_on_change)
@@ -102,16 +114,20 @@ def recompute_computed(o, k):
 
 def field_should_be_synced(cls):
     novue = cls._v_novue if hasattr(cls, '_v_novue') else []
-    return lambda k: k[0] != '_' and k not in novue
+    if hasattr(cls, 'props'):
+        novue.append('props')
+    return lambda k: k[0] != '_' and not k.startswith('computed_') and k not in novue
 
 # class annotation
 def model(cls):
+    if not hasattr(cls, 'props'): setattr(cls, 'props', [])
     g_components[cls.__name__] = cls
     prefix = 'computed_'
     novue = cls._v_novue if hasattr(cls, '_v_novue') else []
     cls._v_nobroadcast = cls._v_nobroadcast if hasattr(cls, '_v_nobroadcast') else []
     computed = [k[len(prefix):] for k in dir(cls) if k.startswith(prefix)]
     cls._v_computed = {}
+    cls._v_just_schedule = True
     for k in computed:
         cls._v_computed[k] = getattr(cls, prefix+k)
         setattr(cls, k, make_computed_prop(k))
@@ -119,15 +135,13 @@ def model(cls):
         if not callable(getattr(cls, k)):
             v = getattr(cls, k)
             setattr(cls, '_'+k, v)
-            setattr(cls, k, make_prop(k))
+            setattr(cls, k, make_prop(k, k in cls.props))
     return cls
 
 
 def broadcast(self, k):
-    print("BCAST", hasattr(self, '__id'), k)
     if not hasattr(self, '__id'): return # no id yet, still building
     if k in self._v_nobroadcast: return
-    print("     ", self.__id, k, getattr(self, k))
     asyncio.ensure_future(broadcast_update(self.__id, k, getattr(self, k)))
 
 def call_watcher(o, k):
@@ -158,18 +172,19 @@ def handleClient():
 
     async def handleClient(websocket, path):
         # TODO: these all should be per-id? to avoid unncessary calls?
+        # TODO: cleanup g_instances (on socket disconnect at least)
         all.append(websocket)
         try:
             while True:
                 comm = await websocket.recv()
-                print("COMM", comm)
-                if comm == 'INIT':
+                if comm == 'INIT' or comm == 'INFO':
                     clss_name = await websocket.recv()
-                    print("CLASS NAME", clss_name)
+                    info('IN', comm, clss_name)
                     if clss_name == 'ROOT':
                         id = clss_name
                         o = g_instances[id]
                         clss = type(o)
+                        o._v_just_schedule = False
                     elif clss_name not in g_components:
                         info('ERR', 'Component type ' + clss_name + ' not found (missing @model?).')
                     else:
@@ -178,33 +193,43 @@ def handleClient():
                         id = next_instance_id()
                         setattr(o, '__id', id)
                         setup_model_object_infra(o)
-                        data = await websocket.recv()
-                        info('IN', 'PROPS', data)
-                        data = json.loads(data)
-                        for k in data:
-                            setattr(o, k, '')
-                        setup_model_object_infra(o)
                         g_instances[id] = o
+                        if comm == 'INIT':
+                            prop_values = await websocket.recv()
+                            prop_values = json.loads(prop_values)
+                            info('IN', prop_values)
+                            for k in prop_values.keys():
+                                setattr(o, k, prop_values[k])
+                            o._v_just_schedule = False
+                            recompute_scheduled_computed(o)
+                        else:
+                            o._v_just_schedule = False
+                            # we do it as for computed, we have no reasonable default...
+                            # as they might depend on the properties (and thus their type is unknown)
+                            # it would be called anyway on state[k] = getattr(o, k) below
+                            # and for now we don't know what to put as a default value (that will be temporary present on the js side)
+                            recompute_scheduled_computed(o)
                     state = {}
+                    props = o.props if hasattr(o, 'props') else []
                     methods = []
                     for k in filter(field_should_be_synced(clss), dir(clss)):
-                        if callable(getattr(o, k)):
+                        if k in props: continue
+                        if callable(getattr(clss, k)):
                             methods.append(k)
                         else:
                             state[k] = getattr(o, k)
                             state[k] = sanitize(state[k])
                     to_send = {
                         'id': id,
+                        'props': props,
                         'state': state,
                         'methods': methods
                     }
-                    info('OUT', 'INIT', clss.__name__, id, list(state.keys()))
-                    await websocket.send('INIT ' + json.dumps(to_send))
+                    info('OUT', comm, to_send)
+                    await websocket.send(comm + ' ' + json.dumps(to_send))
                 elif comm == 'CALL':
                     id = await websocket.recv()
-                    print(type(id), id)
                     o = g_instances[id]
-                    print(o)
                     meth = await websocket.recv()
                     info('IN', 'METH', meth)
                     data = await websocket.recv()
@@ -213,7 +238,8 @@ def handleClient():
                         ###############
                         res = getattr(o, meth)(*json.loads(data))
                     except Exception as inst:
-                        info('ERR', '... exception while calling method:', inst)
+                        info('ERR', 'Exception while calling method:', inst)
+                        info_exception('ERR', '  ')
                 elif comm == 'UPDATE':
                     id = await websocket.recv()
                     o = g_instances[id]
@@ -225,11 +251,18 @@ def handleClient():
                         call_watcher(o, k)
                     except Exception as e:
                         info('ERR', 'Not a JSON value (or watcher error) for key', k, '->', v, '//', e)
-                        import traceback
-                        traceback.print_exc()
-        except:
-            info('END', 'websocket disconnected')
-            pass # disconnected
+                        info_exception('ERR', '  ')
+        except websockets.ConnectionClosed as e:
+            if e.code == 1001:
+                info('END', 'disconnected')
+            elif e.code == 1005:
+                info('END', 'closed')
+            else:
+                info('END', e)
+                info_exception('ENDx')
+        except Exception as e:
+            info('END', e)
+            info_exception('ENDe')
     return handleClient
 
 # decorator
@@ -245,7 +278,6 @@ def setup_model_object_infra(o):
     cls = o.__class__
     o._v_cache = {}
     o._v_currently_computing = []
-    o._v_just_schedule = False
     o._v_schedule_recomputing = []
     o._v_deps = {}
     # Set all attributes, so they get wrapped (e.g., observable) if necessary

@@ -20,10 +20,10 @@
     <progress style="width: 500px" max="100" :value="i"></progress>
     <my-show :val="i" pre="my-show 1:"></my-show>
     <my-show :val="i" pre="my-show 2:"></my-show>
-    <my-dummy></my-dummy>
-    <my-dummy></my-dummy>
     <my-square :val="i" pre="my-square 1:"></my-square>
-    <my-square :val="i" pre="my-square 2:"></my-square>
+    <my-square :val="i" :pre="'my-square '+i+':'"></my-square>
+    <my-dummy></my-dummy>
+    <my-dummy></my-dummy>
   </div>
 
   <script src="vuejspython.js"></script>
@@ -36,12 +36,9 @@
   /* vuejspython component */
   vuejspython.component('Dummy', 'my-dummy', {
     template: '<div> {{i}} <button @click="incr(1)">+</button> -> {{i**2}} (in the vjspy template)</div>',
-    beforeCreate: () => {console.log("beforeCreate")},
-    created: () => {console.log("created")},
-    data: () => ({i:parseInt(Math.random()*100)})
   })
   vuejspython.component('Square', 'my-square', {
-    props: ['val', 'pre'],
+    props: ['pre'], /* these props are visible only on the js side */
     template: '<div> {{pre}} {{val}} -> {{square}} (py-computed value, in the component)</div>',
     data: () => ({})
   })

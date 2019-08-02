@@ -22,7 +22,6 @@ vuejspython.start = function(wsurl, opt={}) {
   })
   ws.addEventListener('message', function(a) {
     a = a.data
-    console.log("rcv root", a)
     if (a.startsWith('INIT ')) {
       a = JSON.parse(a.substr('INIT '.length))
       let computed = {...opt.computed}
@@ -89,37 +88,32 @@ vuejspython.component = function(pyClass, name, opt={}) {
 
   // later, consider refactoring if the two are really similar
   if (opt.props === undefined) opt.props = []
+  if (opt.data === undefined) opt.data = ()=>({})
 
   let created = opt.created || (()=>{})
-  for (let k of ['created']) delete opt[k]
+  let props = opt.props
+  let optdata = opt.data
+  for (let k of ['created', 'data', 'props']) delete opt[k]
 
-  // TODO make a first call to know what is in data (what is reactive)
-  //      same for python-computed I guess
-  // ... and this will make all this registration async, so async component
-  // currently, we are forced to declare it also in js
-
-  // TODO watch properties below to send notif
-  Vue.component(name, {
+  let description = (pyState) => ({
     created: function() {
+      let vm = this
+      vm.__id = 'NOT-SET-YET'
       let wsurl = vuejspython.wsurl
       let ws = new WebSocket(wsurl)
       let valuesWhere = {}
       ws.addEventListener('open', function(a) {
         ws.send('INIT')
         ws.send(pyClass)
-        ws.send(JSON.stringify(opt.props))
+        ws.send(JSON.stringify(vm.$props))
       })
 
-      let vm = this
-      vm.__id = 'NOT-SET-YET'
       ws.addEventListener('message', function(a) {
         a = a.data
         vm.__ws = ws
-        console.log("rcv", name, a)
         if (a.startsWith('INIT ')) {
           a = JSON.parse(a.substr('INIT '.length))
           vm.__id = a.id
-          console.log("RECEIVED INIT ID", pyClass, a.id, Object.keys(a.state))
 
           for (let k in a.state) {
             vm.$set(vm, k, a.state[k])
@@ -132,6 +126,17 @@ vuejspython.component = function(pyClass, name, opt={}) {
               ws.send(k)
               ws.send(JSON.stringify(v))
             })
+          }
+          for (let k of a.props) {
+            vm.$watch(k, function (v, old) {
+              if (this.__id === 'NOT-SET-YET') return
+              if (valuesWhere[k] == v) return
+              delete valuesWhere[k]
+              ws.send('UPDATE')
+              ws.send(vm.__id)
+              ws.send(k)
+              ws.send(JSON.stringify(v))
+            }, {immediate: true})
           }
           for (let k of a.methods) {
             vm[k] = function(...args) {
@@ -147,7 +152,6 @@ vuejspython.component = function(pyClass, name, opt={}) {
           let k = parts[2]
           if (upid === vm.__id) {
             let v = a.substr(parts.join(' ').length)
-            console.log(v)
             v = JSON.parse(v)
             valuesWhere[k] = v
             vm.$set(vm, k, v)
@@ -157,6 +161,31 @@ vuejspython.component = function(pyClass, name, opt={}) {
 
       created.bind(this)() // not sure when it is best to call it, or whether we should accept it at all
     },
+    data: () => ({
+      ...pyState,
+      ...optdata()
+    }),
+    props,
     ...opt
+  })
+
+
+  Vue.component(name, function (resolve, reject) {
+    let wsurl = vuejspython.wsurl
+    let wsMeta = new WebSocket(wsurl)
+    wsMeta.addEventListener('open', function(a) {
+      wsMeta.send('INFO')
+      wsMeta.send(pyClass)
+    })
+    wsMeta.addEventListener('message', function(a) {
+      a = a.data
+      if (a.startsWith('INFO ')) {
+        a = JSON.parse(a.substr('INFO '.length))
+        props = [...props, ...a.props]
+        let desc = description(a.state)
+        resolve(desc)
+        wsMeta.close()
+      }
+    })
   })
 }

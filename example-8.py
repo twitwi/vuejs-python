@@ -26,7 +26,9 @@ class Dummy:
 
 @model
 class Square:
-    val = 0 # prop
+    props = ['val'] # python defined props
+    val = 0 # need a value for typing reasons, maybe this will change
+    # TODO? consider a more vuejs syntax like: props = {'val': {'default': 0}}
 
     def computed_square(self):
         return self.val ** 2
