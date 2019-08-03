@@ -14,9 +14,10 @@
   <div id="main">
 
     <h3>{{ title }}</h3>
-    <a @click="titleReverse2()" class="button">swap</a>
-    <!--a @click="title = meth3(title)" class="button">swap</a-->
-    <a @click="titleReverse3()" class="button">swap</a> <!-- all methods are async -->
+    <a @click="(async()=> title = await meth2(title))" class="button">swap</a>
+    <!--a @click.async="title = meth3(title)" class="button">swap</a-->
+    <a @click="(async()=> title = await meth3(title))" class="button">swap</a> <!-- all methods are async -->
+    <a @click="asyncSet('title', meth3(title))" class="button">swap</a> <!-- all methods are async -->
     <br/>
 
     We can have a state in Python which is a counter "i".
@@ -61,12 +62,8 @@
         }
       },
       methods: {
-        async titleReverse2 () { // to my knowledge, we cannot do await directly in @click
-          this.title = await this.meth2(this.title)
-        },
-        async titleReverse3 () { // to my knowledge, we cannot do await directly in @click
-          this.title = await this.meth3(this.title)
-          //           ^^^^^ async even if in pyton it is a non-async method
+        async asyncSet (attr, asyncVal) {
+          this.$set(this, attr, await asyncVal)
         },
       }
     })
