@@ -14,9 +14,9 @@ class Comp:
     _v_novue = ['subtitle'] # property names to exclude from the synchronized state
 
     def __init__(self):
-        self.i = 25
+        self.i = 10
         # just for the example, starts a loop that increments every few seconds
-        asyncio.ensure_future(self.demo_incr(2, 3))
+        asyncio.ensure_future(self.demo_incr(1, 2))
 
     def watch_i(self, i):
         print("TEST: UPDATING i2_withwatch")

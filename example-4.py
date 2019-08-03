@@ -24,7 +24,8 @@ class Comp:
         plt.grid()
         plt.plot(x, y)
         plt.savefig(fname)
+        plt.close()
         self.fname = fname
-        
+
 
 start(Comp())

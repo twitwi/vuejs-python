@@ -50,7 +50,7 @@
         this.showGraph()
       },
       watch: {
-        toplot: function() { this.showGraph() },
+        toplot: function(newVal) { this.showGraph(newVal) },
       },
       computed: { // computed on the js side
         toplot: function() {
@@ -118,11 +118,12 @@
       methods: {
         showGraph: function () {
           let [graphs, layout] = this.toplot
-
+          let c = v => JSON.parse(JSON.stringify(v))
+          // don't know why but the copy of graphs is necessary...
           if (this.plt === undefined) {
             this.plt = Plotly.newPlot(this.$refs.ply, graphs, layout, {responsive: true})
           } else {
-            Plotly.react(this.$refs.ply, graphs, layout, {responsive: true})
+            Plotly.react(this.$refs.ply, c(graphs), layout, {responsive: true})
           }
         }
       },

@@ -7,7 +7,7 @@ class Comp:
     # define properties to forward to vue (or not)
     i_name = 'l'
     o_name = 's'
-    slice_expr = ':'
+    slice_expr = '5:15'
     is_error = False
     input_expr = str(list(range(40,60)))
 
