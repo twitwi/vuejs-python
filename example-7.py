@@ -22,10 +22,14 @@ class Comp:
         except:
             return []
 
-    def computed_output(self):
+    def computed_taginput(self):
+        return ['%s#%03d'%(str(v), i) for i,v in enumerate(self.input)]
+
+    def computed_tagoutput(self):
         try:
             locals()[self.i_name] = self.input
-            res = eval('%s[%s]'%(self.i_name, self.slice_expr))
+            locals()['___'+self.i_name] = self.taginput
+            res = eval('___%s[%s]'%(self.i_name, self.slice_expr))
             self.is_error = False
             return res
         except Exception as e:

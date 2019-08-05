@@ -79,7 +79,7 @@
           </tr>
           <tr class="values">
             <td>Values</td>
-            <td v-for="v,i in input" :class="{picked: isPicked(v)}" :style="{'--value': tdValue(v)}">{{v}}</td>
+            <td v-for="v,i in taginput" :class="{picked: isPicked(v)}" :style="{'--value': tdValue(clean(v))}">{{clean(v)}}</td>
           </tr>
           <tr class="negative indices">
             <td>Negative indices</td>
@@ -111,7 +111,7 @@
 {{is_error ? error_message : ''}}</code></pre>
 
       <h3>Output <code>{{o_name}}</code>, after running <code>{{o_name}} = {{i_name}}[{{slice_expr}}]</code></h3>
-      <table v-if="output.join !== undefined">
+      <table v-if="tagoutput.join !== undefined">
         <tr class="indices">
           <td>Indices</td>
           <td v-for="v,i in output">{{i}}</td>
@@ -145,19 +145,25 @@
       maxValue() {
         return Math.max(...this.input)
       },
+      output () {
+        return this.tagoutput.map(this.clean)
+      },
       outputAsStr () {
-        let o = this.output
-        return o.join === undefined ? o : '['+o.join(', ')+']'
+        let o = this.tagoutput
+        return o.join === undefined ? o : '['+o.map(this.clean).join(', ')+']'
       }
     },
     methods: {
+      clean (v) {
+        return v.replace(/#[0-9]*$/, '')
+      },
       tdValue (v) {
         return (v - this.minValue) / (this.maxValue - this.minValue + 0.000001)
       },
       isPicked (v) {
-        if (this.output === v) return true
-        if (this.output.indexOf === undefined) return false
-        return this.output.indexOf(v) !== -1
+        if (this.tagoutput === v) return true
+        if (this.tagoutput.indexOf === undefined) return false
+        return this.tagoutput.indexOf(v) !== -1
       }
     }
   })
