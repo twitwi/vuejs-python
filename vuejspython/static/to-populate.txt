@@ -1,0 +1,3 @@
+
+cd ..
+./update-static.sh
