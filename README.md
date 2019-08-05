@@ -56,5 +56,7 @@ pvue example-1
 
 # TODO
 
-- make components working (more than a single top level one, or make it easy to pass linked-state to js components)
+- see why example-8 is slow with the python-only server
+- test atomic in components
+- make it an all-components (no too-special ROOT', with also js that tells what class and  package/file (import everything manually in a main.py if not easy)  is the root -> this way we can run a single python and have multiple demos
 - have a clean solution for the observable collections (integrate and clean minimal code or find another lib)
