@@ -135,6 +135,7 @@ python3 -m pip install  .. ; ll $VENV/lib/python3.6/site-packages/vuejspython
 
 ## TODO
 
+- test (in venv) and set proper dependencies in the pip installable module
 - see why example-8 is slow with the python-only server
 - test atomic in components
 - make it an all-components (no too-special ROOT', with also js that tells what class and  package/file (import everything manually in a main.py if not easy)  is the root -> this way we can run a single python and have multiple demos
