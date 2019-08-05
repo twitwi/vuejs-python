@@ -5,14 +5,17 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="vuejspython",
-    version="0.0.4",
+    version="0.2.0",
     author="Rémi Emonet",
-    author_email="remi.emonet@reverse--com.heeere",
+    author_email="remi-242-e2f8@heeere.com",
     description="Bridging vuejs and python (e.g., to leverage numpy)",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/twitwi/vuejs-python/",
     packages=setuptools.find_packages(),
+    package_data={
+        'vuejspython.static': ['*.js', '*.css']
+    },
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",

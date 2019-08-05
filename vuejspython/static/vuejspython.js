@@ -4,7 +4,7 @@ var vuejspython = {}
 vuejspython.defaultPort = 4259
 vuejspython.wsurl = null
 
-vuejspython.start = function(wsurl=undefined, opt={}) {
+vuejspython.start = function(opt={}, wsurl=undefined) {
   if (wsurl === undefined || wsurl === null) {
     wsurl = 'localhost'
   }

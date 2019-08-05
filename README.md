@@ -15,7 +15,9 @@ pip install vuejspython
 
 <div style="display: flex">
   <div style="flex: 50%;">
-  # example.py
+
+  `# example.py`
+
 ```python
     ...
     @model
@@ -26,19 +28,23 @@ pip install vuejspython
 
     vuejspython.start(App())
 ```
+
   </div>
   <div style="flex: 50%;">
-  # example.html
+
+  `# example.html`
+
 ```html
     <div id="main">
       Fill the radius in the text field: <input v-model.number="radius"/>.
       (or with <button @click="radius += 1">+1</button> <br/>
       A disk with radius {{ radius }} has an area of {{ area }}.
     </div>
-    
+     
     <script src="lib/vuejspython.js"></script>
     <script>vuejspython.start()</script>
 ```
+
   </div>
 </div>
 
@@ -51,6 +57,8 @@ There are projects that try to help integrating Vue.js with different Python web
 
 ----
 <!-- the line above delimits the end of pypi long_description -->
+
+(to be updated)
 
 ## Requirements
 

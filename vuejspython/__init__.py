@@ -3,7 +3,7 @@ __name__ = 'vuejspython'
 import asyncio
 import websockets
 import json
-from observablecollections.observablelist import ObservableList
+from vuejspython.observablecollections.observablelist import ObservableList
 import traceback
 from collections import defaultdict
 
