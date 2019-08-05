@@ -86,7 +86,6 @@ vuejspython.start = function(wsurl, opt={}) {
         delete calls[callId]
       }
     } else if (a.startsWith('ATOMIC ')) {
-      // TODO: ATOMIC also for the components
       let parts = a.split(' ')
       let upid = parts[1]
       // let k = parts[2] '_v_ATOMIC'
@@ -126,8 +125,6 @@ vuejspython.start = function(wsurl, opt={}) {
 }
 
 
-let instanceId = 1
-
 vuejspython.component = function(pyClass, name, opt={}) {
 
   // later, consider refactoring if the two are really similar
@@ -145,6 +142,9 @@ vuejspython.component = function(pyClass, name, opt={}) {
       vm.__id = 'NOT-SET-YET'
       let wsurl = vuejspython.wsurl
       let ws = new WebSocket(wsurl)
+      let calls = {}
+      let atomic = false
+      let toApply = {}
       let valuesWhere = {}
       ws.addEventListener('open', function(a) {
         ws.send('INIT')
@@ -183,11 +183,45 @@ vuejspython.component = function(pyClass, name, opt={}) {
             }, {immediate: true})
           }
           for (let k of a.methods) {
-            vm[k] = function(...args) {
-              ws.send('CALL')
-              ws.send(vm.__id)
-              ws.send(k)
-              ws.send(JSON.stringify(args))
+            vm[k] = async function(...args) {
+              return new Promise(function (resolve, reject) {
+                ws.send('CALL')
+                ws.send(vm.__id)
+                let callId = (Math.random()*1000).toString().replace(/\./, '')
+                calls[callId] = {resolve, reject}
+                ws.send(callId)
+                ws.send(k)
+                ws.send(JSON.stringify(args))
+              })
+            }
+          }
+        } else if (a.startsWith('RETURN ')) {
+          let parts = a.split(' ', 2)
+          let callId = parts[1]
+          if (calls[callId] !== undefined) {
+            let v = JSON.parse(a.substr(parts.join(' ').length))
+            calls[callId].resolve(v)
+            delete calls[callId]
+          }
+        } else if (a.startsWith('ATOMIC ')) {
+          let parts = a.split(' ')
+          let upid = parts[1]
+          // let k = parts[2] '_v_ATOMIC'
+          let setAtomic = JSON.parse(parts[3])
+          if (upid === vm.__id) {
+            if (!atomic && setAtomic) {
+              atomic = true
+              toApply = {}
+            } else if (atomic && !setAtomic) {
+              atomic = false
+              for (let k in toApply) {
+                let v = toApply[k]
+                valuesWhere[k] = v
+                vm.$set(vm, k, v)
+              }
+              toApply = {}
+            } else {
+              console.log('INCOHERENT COMPONENT atomic STATE', atomic, setAtomic)
             }
           }
         } else if (a.startsWith('UPDATE ')) {
