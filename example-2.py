@@ -72,4 +72,4 @@ class Comp:
 
 
 m = Comp()
-vuejspython.start(Comp(), port=4242)
+vuejspython.start(Comp(), py_port=4242)

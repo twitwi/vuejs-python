@@ -1,3 +1,4 @@
+__name__ = 'vuejspython'
 
 import asyncio
 import websockets
@@ -5,6 +6,8 @@ import json
 from observablecollections.observablelist import ObservableList
 import traceback
 from collections import defaultdict
+
+from .serve import run_http_server
 
 g_components = {}
 g_instances = {}
@@ -331,11 +334,13 @@ def setup_model_object_infra(o):
         recompute_computed(o, k)
 
 
-def start(o, port=4259, host='localhost'):
+def start(o, http_port=4260, http_host='localhost', py_port=4259, py_host='localhost', serve=True):
     g_instances['ROOT'] = o
     setattr(o, '__id', 'ROOT')
     setup_model_object_infra(o)
     #inreader = asyncio.StreamReader(sys.stdin)
-    ws_server = websockets.serve(handleClient(), host, port)
+    ws_server = websockets.serve(handleClient(), py_host, py_port)
     asyncio.ensure_future(ws_server)
+    if serve:
+        run_http_server(http_port, http_host)
     asyncio.get_event_loop().run_forever()

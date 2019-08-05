@@ -2,6 +2,7 @@
 import asyncio
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 
 from vuejspython import model, start
 
@@ -16,7 +17,10 @@ class Comp:
         self.i = 1
 
     def watch_i(self, i):
-        fname = ",,fname-"+str(self.i)+".svg"
+        d = ",,ex4"
+        if not os.path.exists(d):
+            os.makedirs(d)
+        fname = d+"/fname-"+str(self.i)+".svg"
         x = np.linspace(0, 100, 1000)
         y = x-i
         y[y<0] = 0

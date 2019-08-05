@@ -131,13 +131,13 @@
   </div>
 
 
-  <script src="vuejspython.js"></script>
+  <script src="lib/vuejspython.js"></script>
   <script>
   Vue.component('help', {
     props: ['title', 'a'],
     template: `<span class="help" :title="title" @click="$parent[a] = title">?</span>`
   })
-  vuejspython.start('localhost', {
+  vuejspython.start({
     computed:  {
       minValue() {
         return Math.min(...this.input)

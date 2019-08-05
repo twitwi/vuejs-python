@@ -26,7 +26,7 @@
     <my-dummy></my-dummy>
   </div>
 
-  <script src="vuejspython.js"></script>
+  <script src="lib/vuejspython.js"></script>
   <script>
   /* plain vuejs component */
   Vue.component('my-show', {
@@ -42,7 +42,7 @@
     template: '<div> {{pre}} {{val}} -> {{square}} (py-computed value, in the component)</div>',
     data: () => ({})
   })
-  vuejspython.start('localhost')
+  vuejspython.start()
   </script>
 </body>
 </html>

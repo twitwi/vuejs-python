@@ -37,9 +37,9 @@
     <img :src="currentImage" alt="WARNING: this example requires some private data"></img>
   </div>
 
-  <script src="vuejspython.js"></script>
+  <script src="lib/vuejspython.js"></script>
   <script>
-  vuejspython.start('ws://localhost:4242')
+  vuejspython.start({}, 'ws://localhost:4242')
   </script>
 </body>
 </html>

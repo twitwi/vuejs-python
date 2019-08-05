@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <title>Vue-Python sample 1</title>
-  <script src="lib/vue.js"></script>
+  <script src="lib/vue.min.js"></script>
   <link rel="stylesheet" href="lib/picnic.min.css" />
   <style>
     body { margin: 2em; }
@@ -52,10 +52,11 @@
 
   </div>
 
-  <script src="vuejspython.js"></script>
+  <script src="lib/vuejspython.js"></script>
   <script>
-  vuejspython.start('localhost', // can also use a full URL ws://....:
-    { // optionnal configuration object
+  // TODO reorder examples, first with no params, then with an object, then with a host maybe
+  vuejspython.start(
+    { // optional configuration object
       computed: { // computed on the js side
         i2_injs: function () {
           return this.i * this.i
