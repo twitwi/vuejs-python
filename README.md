@@ -115,6 +115,24 @@ pvue example-1
 ~~~
 
 
+## Pypi stuff
+
+~~~
+python3 -m pip install --upgrade setuptools wheel
+python3 -m pip install --upgrade twine
+
+rm -rf dist/
+python3 setup.py sdist bdist_wheel
+python3 -m twine upload --repository-url https://test.pypi.org/legacy/ dist/*
+
+python3 -m pip install --index-url https://test.pypi.org/simple/ --no-deps vuejspython
+
+pip uninstall vuejspython
+
+python3 -m pip install  .. ; ll $VENV/lib/python3.6/site-packages/vuejspython
+~~~
+
+
 ## TODO
 
 - see why example-8 is slow with the python-only server
