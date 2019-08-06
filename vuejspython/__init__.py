@@ -1,13 +1,12 @@
 __name__ = 'vuejspython'
 
+import os
 import asyncio
 import websockets
 import json
 from vuejspython.observablecollections.observablelist import ObservableList
 import traceback
 from collections import defaultdict
-
-from .serve import run_http_server
 
 g_components = {}
 g_instances = {}
@@ -341,6 +340,7 @@ def start(o, http_port=4260, http_host='localhost', py_port=4259, py_host='local
     #inreader = asyncio.StreamReader(sys.stdin)
     ws_server = websockets.serve(handleClient(), py_host, py_port)
     asyncio.ensure_future(ws_server)
-    if serve:
+    if serve and os.environ.get('NOSERVE') is None:
+        from .serve import run_http_server
         run_http_server(http_port, http_host)
     asyncio.get_event_loop().run_forever()

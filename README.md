@@ -13,6 +13,9 @@ pip install vuejspython
 
 ## Tiny Example
 
+You need to create two files: one Python model and an HTML UI.
+A good convention (to help tools) is to use the same name, with the `.py` and `.html` extensions, respectively.
+
 <div style="display: flex">
   <div style="flex: 50%;">
 
@@ -48,8 +51,68 @@ pip install vuejspython
   </div>
 </div>
 
+## Running, option 1: only with Python
 
-## Similar projects?
+~~~bash
+python3 example.py
+
+# or a tiny shell function helper
+pvue() { (sleep .5;firefox ${1%.*}.html)& python3 ${1%.*}.py;}
+pvue example.py
+~~~
+
+This will give you an address to which you should append your HTML file name, here `example.html`.
+In this example, you will visit <http://localhost:4260/example.html>
+(or visit the given address `http://localhost:4260` and click your file).
+
+NB: you need to stop the command with `Ctrl+C` if you want to run another example.
+
+
+## Running, option 2: with hot reload on file change
+
+Here we will start two processes, one for the HTML part (with live reload, and another only for the Python).
+
+Terminal 1, hosting the HTML files with hot reload:
+
+~~~bash
+# one-time install
+pip install watchdog
+npm install -g simple-hot-reload-server
+# in terminal 1 (hot html reload, for all files)
+hrs .
+~~~
+(this gives you the address to open, after appending your file name, e.g., <http://localhost:8082/example.html>)
+
+Terminal 2, running the python server
+
+~~~bash
+# in terminal 2 (start or restart python)
+NOSERVE=1 python3 example.py
+# OR, for live restart
+NOSERVE=1 watchmedo auto-restart --patterns="*.py" python3 example.py
+~~~
+NB: `NOSERVE=1` tells vuejspython to not serve the HTML files (it is handled by `hrs` above)
+
+NB: when changing the .py, a manual browser refresh is still needed, see below for a more complete solution
+
+### Helper for complete live reload (live restart for python)
+
+~~~bash
+pvue() { if test "$1" = open ; then shift ; (sleep 1 ; firefox "http://localhost:8082/${1%.*}.html") & fi; watchmedo auto-restart --patterns="*.py" --ignore-patterns="*/.#*.py" bash -- -c '(sleep .250 ; touch '"${1%.*}"'.html) & python3 '"${1%.*}"'.py' ; }
+# Then
+pvue example
+# OR to also open firefox
+pvue open example
+# OR some convenient variations
+NOSERVE=1 pvue open example
+pvue open example.
+pvue open example.py
+pvue open example.html
+# it always runs the file with the .py extension
+~~~
+
+
+## Other, different projects
 
 If you're interested only in using Python the language with Vue.js, you can try [brython](http://brython.info/) and the [brython vue demo](http://brython.info/gallery/test_vue.html)
 
@@ -58,27 +121,34 @@ There are projects that try to help integrating Vue.js with different Python web
 ----
 <!-- the line above delimits the end of pypi long_description -->
 
-(to be updated)
+## Development
 
-## Requirements
+### Requirements
 
 ~~~ bash
-pip install asyncio
+pip install aiohttp
 pip install websockets
 ~~~
 
-Currently requires some "observable collections", with modifications (just local import "from .stuff import Thing".
+You also need to get a few libraries:
+
+~~~
+cd vuejspython
+./update-static.sh # or manually download the files
+~~~
+
+### Notes
+
+Currently, the project uses requires some "observable collections", with some modifications.
+They are included in the package, in `vuejspython/observablecollections`.
+They have been obtained with:
 
 ~~~ bash
 git clone https://github.com/fousteris-dim/Python-observable-collections.git observablecollections
 patch -d observablecollections/ < 0001-Local-imports.patch
 ~~~
 
-And for some better styling of some examples you might want to download picnicss.
 
-~~~
-wget https://raw.githubusercontent.com/franciscop/picnic/master/picnic.min.css -O lib/picnic.min.css
-~~~
 
 ## Helpers
 
