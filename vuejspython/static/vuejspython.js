@@ -3,6 +3,21 @@ var vuejspython = {}
 vuejspython.defaultPort = 4259
 vuejspython.wsurl = null
 
+function isSame(a, b) {
+  if (a === b) return true
+  if (a == null || b == null) return false
+  if (Array.isArray(a) && Array.isArray(b)) {
+    if (a.length != b.length) return false
+
+    for (var i = 0; i < a.length; ++i) {
+      if (a[i] !== b[i]) return false
+    }
+    return true
+  } else {
+    return a == b
+  }
+}
+
 vuejspython.start = function(opt = {}, wsurl = undefined) {
   if (wsurl === undefined || wsurl === null) {
     wsurl = 'localhost'
@@ -40,7 +55,7 @@ vuejspython.start = function(opt = {}, wsurl = undefined) {
       for (let k of ['el', 'data', 'watch', 'methods', 'computed']) delete opt[k]
       for (let k in a.state) {
         let watchk = function(v, old) {
-          if (valuesWhere[k] == v) return
+          if (isSame(valuesWhere[k], v)) return
           delete valuesWhere[k]
           ws.send('UPDATE')
           ws.send('ROOT')
