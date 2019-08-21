@@ -18,6 +18,15 @@ function isSame(a, b) {
   }
 }
 
+function customSet(vm, k, v) {
+  if (Array.isArray(vm[k])) {
+    // to keep object identity (if it was passed to a sub-component, but will not work deeply...)
+    vm[k].splice(0, vm[k].length, ...v)
+  } else {
+    vm.$set(vm, k, v)
+  }
+}
+
 vuejspython.start = function(opt = {}, wsurl = undefined) {
   if (wsurl === undefined || wsurl === null) {
     wsurl = 'localhost'
@@ -119,7 +128,7 @@ vuejspython.start = function(opt = {}, wsurl = undefined) {
           for (let k in toApply) {
             let v = toApply[k]
             valuesWhere[k] = v
-            vm.$set(vm, k, v)
+            customSet(vm, k, v)
           }
           toApply = {}
         } else {
@@ -137,7 +146,7 @@ vuejspython.start = function(opt = {}, wsurl = undefined) {
           toApply[k] = v
         } else {
           valuesWhere[k] = v
-          vm.$set(vm, k, v)
+          customSet(vm, k, v)
         }
       }
     }
@@ -181,7 +190,7 @@ vuejspython.component = function(pyClass, name, opt = {}) {
             vm.$set(vm, k, a.state[k])
             vm.$watch(k, function(v, old) {
               if (this.__id === 'NOT-SET-YET') return
-              if (valuesWhere[k] == v) return
+              if (isSame(valuesWhere[k], v)) return
               delete valuesWhere[k]
               ws.send('UPDATE')
               ws.send(vm.__id)
@@ -239,7 +248,7 @@ vuejspython.component = function(pyClass, name, opt = {}) {
               for (let k in toApply) {
                 let v = toApply[k]
                 valuesWhere[k] = v
-                vm.$set(vm, k, v)
+                customSet(vm, k, v)
               }
               toApply = {}
             } else {
@@ -254,7 +263,7 @@ vuejspython.component = function(pyClass, name, opt = {}) {
             let v = a.substr(parts.join(' ').length)
             v = JSON.parse(v)
             valuesWhere[k] = v
-            vm.$set(vm, k, v)
+            customSet(vm, k, v)
           }
         }
       })
