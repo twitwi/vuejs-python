@@ -191,10 +191,11 @@ pvue example-1
 python3 -m pip install --upgrade setuptools wheel
 python3 -m pip install --upgrade twine
 
-rm -rf dist/
 # update the version number in setup.py and then
+rm -rf dist/
 python3 setup.py sdist bdist_wheel
 python3 -m twine upload --repository-url https://test.pypi.org/legacy/ dist/*
+# OR: python3 -m twine upload dist/*
 
 python3 -m pip install --index-url https://test.pypi.org/simple/ --no-deps vuejspython
 
