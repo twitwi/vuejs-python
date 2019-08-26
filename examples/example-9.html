@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Vue-Python sample 0</title>
+    <script src="lib/vue.min.js"></script>
+    <link rel="stylesheet" href="lib/picnic.min.css" />
+    <style>
+      body {
+        margin: 2em;
+      }
+      .sliders {
+        margin-left: 1em;
+      }
+      .sliders .min,
+      .sliders .max {
+        position: absolute;
+        right: 101%;
+        font-size: 8px;
+      }
+      .sliders .min {
+        bottom: 0%;
+      }
+      .sliders .max {
+        top: 0%;
+      }
+      .sliders.disabled {
+        background: lightgray;
+      }
+      .sliders.disabled input {
+        pointer-events: none; /* not perfect though */
+      }
+      .sliders {
+        --width: 200px;
+        --height: 200px;
+        --scale: 0.7;
+        border: 1px solid black;
+        width: var(--width);
+        height: var(--height);
+        position: relative;
+      }
+      .sliders input[type='range'] {
+        width: calc(var(--height) / var(--scale));
+        position: absolute;
+        transform-origin: 0 0;
+        transform: rotate(-90deg) translate(calc(var(--scale) * -100%), 0) scale(var(--scale));
+      }
+      .row {
+        display: flex;
+        flex-direction: row;
+      }
+      .col {
+        display: flex;
+        flex-direction: column;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="main">
+      <div class="row">
+        <div class="col">
+          <array-sliders cclass="input sliders" :data="input" :rw="true" :min="-10" :max="10" :step=".1"></array-sliders>
+          <p>logp</p>
+        </div>
+        <div class="col">
+          <array-sliders cclass="sliders disabled" :data="softmaxInput"></array-sliders>
+          <p>softmax(logp)</p>
+        </div>
+      </div>
+      <p>
+        scale: {{ scale }}
+        <input type="range" v-model.number="scale" min="-1" max="10" step="0.1" />
+      </p>
+      <p>
+        bias: {{ bias }}
+        <input type="range" v-model.number="bias" min="-10" max="10" step="0.1" />
+      </p>
+      <div class="row">
+        <div class="col">
+          <array-sliders cclass="sliders disabled" :data="relu" :min="0" :max="20" :step="1"></array-sliders>
+          <p>ReLU(logp*a+b)</p>
+        </div>
+        <div class="col">
+          <array-sliders cclass="sliders disabled" :data="softmaxRelu"></array-sliders>
+          <p>Softmax(ReLU(logp*a+b))</p>
+        </div>
+        <!--<div class="col">
+          <array-sliders cclass="sliders disabled" :data="logsoftmax"></array-sliders>
+          <p>log Softmax(ReLU(logp*a+b))</p>
+        </div>-->
+      </div>
+    </div>
+
+    <script src="lib/vuejspython.js"></script>
+    <script>
+      Vue.component('array-sliders', {
+        props: {
+          cclass: {},
+          data: {},
+          rw: { default: false },
+          min: { default: 0 },
+          max: { default: 1 },
+          step: { default: 0.0001 },
+        },
+        template: `<div :class="cclass">
+          <span class="min">{{min}}</span>
+          <span class="max">{{max}}</span>
+          <template v-if="rw">
+            <input v-for="(v,i) in data" :style="style(i)" type="range" :min="min" :max="max" :step="step" v-model.number="data[i]"></input>
+          </template>
+          <template v-else>
+            <input v-for="(v,i) in data" :style="style(i)" type="range" :min="min" :max="max" :step="step" :value="parseInt(data[i]/step)*step"></input>
+          </template>
+          </div>`,
+        methods: {
+          style(i) {
+            let pc = (100 * i) / this.data.length
+            return { left: pc + '%' }
+          },
+        },
+      })
+      vuejspython.start({
+        methods: {
+          softmax(a) {
+            let ex = a.map(v => Math.exp(v))
+            let sum = ex.reduce((acc, b) => acc + b, 0)
+            let out = [...ex.map(e => e / sum)]
+            return out
+          },
+        },
+        computed: {
+          softmaxInput() {
+            return this.softmax(this.input)
+          },
+          softmaxRelu() {
+            return this.softmax(this.relu)
+          },
+        },
+      })
+    </script>
+  </body>
+</html>
