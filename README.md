@@ -121,7 +121,7 @@ There are projects that try to help integrating Vue.js with different Python web
 ----
 <!-- the line above delimits the end of pypi long_description -->
 
-## Development
+## Development (TO BE REVIEWED AND UPDATED)
 
 ### Requirements
 
