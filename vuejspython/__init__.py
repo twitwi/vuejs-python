@@ -1,6 +1,7 @@
 __name__ = 'vuejspython'
 
 import os
+import sys
 import asyncio
 import websockets
 import json
@@ -177,7 +178,7 @@ async def broadcast_update(id, k, v):
         except:
             pass
 
-def handleClient():
+def handleClient(once=False):
     _previd = [0]
     def next_instance_id():
         _previd[0] += 1
@@ -300,10 +301,12 @@ def handleClient():
             else:
                 info('END', e)
                 info_exception('ENDx')
+            if once: sys.exit()
         except Exception as e:
             cleanup()
             info('END', e)
             info_exception('ENDe')
+            if once: sys.exit()
     return handleClient
 
 # decorator
@@ -338,7 +341,8 @@ def start(o, http_port=4260, http_host='localhost', py_port=4259, py_host='local
     setattr(o, '__id', 'ROOT')
     setup_model_object_infra(o)
     #inreader = asyncio.StreamReader(sys.stdin)
-    ws_server = websockets.serve(handleClient(), py_host, py_port)
+    once = os.environ.get('ONCE') is not None
+    ws_server = websockets.serve(handleClient(once), py_host, py_port)
     asyncio.ensure_future(ws_server)
     if serve and os.environ.get('NOSERVE') is None:
         from .serve import run_http_server
