@@ -175,8 +175,9 @@ async def broadcast_update(id, k, v):
             await ws.send(comm+' '+str(id)+' '+str(k)+' '+json.dumps(v))
             info('OUT', comm, id, k, '{:.80} ...'.format(json.dumps(v)))
             all[id].add(ws)
-        except:
-            pass
+        except Exception as inst:
+            info('ERR', 'Exception while broadcasting update (conversion?):', inst)
+            info_exception('ERR', '  ')
 
 def handleClient(once=False):
     _previd = [0]
