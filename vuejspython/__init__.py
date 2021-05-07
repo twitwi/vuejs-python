@@ -302,7 +302,7 @@ def handleClient(once=False):
             else:
                 info('END', e)
                 info_exception('ENDx')
-            if once: sys.exit()
+            if once and id == 'ROOT': sys.exit()
         except Exception as e:
             cleanup()
             info('END', e)
