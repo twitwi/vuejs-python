@@ -50,11 +50,16 @@ async def embedded_static(request):
     ct = type_from_extension[ext]
     return web.Response(text=data, content_type=ct)
 
-def run_http_server(port, host='localhost'):
+async def run_http_server(port, host='localhost'):
     #static_dir = Path(__file__).with_name('static')
     app = web.Application()
     app.router.add_get('/', index)
     app.router.add_get('/{file:.*[.]html}', patched_html)
     app.router.add_get('/{file:.*lib/.*}', embedded_static)
     app.router.add_static('/', '.', show_index=True)
-    web.run_app(app, host=host, port=port)
+    #web.run_app(app, host=host, port=port)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, host, port)
+    print(f'http://{host}:{port}/')
+    await site.start()

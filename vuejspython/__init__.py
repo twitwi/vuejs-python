@@ -147,11 +147,11 @@ def model(cls):
 def broadcast(self, k):
     if not hasattr(self, '__id'): return # no id yet, still building
     if k in self._v_nobroadcast: return
-    asyncio.ensure_future(broadcast_update(self.__id, k, getattr(self, k)))
+    asyncio.create_task(broadcast_update(self.__id, k, getattr(self, k)))
 
 def broadcast_atomic(self, start):
     if not hasattr(self, '__id'): return # no id yet, still building
-    asyncio.ensure_future(broadcast_update(self.__id, KEY_ATOMIC, start))
+    asyncio.create_task(broadcast_update(self.__id, KEY_ATOMIC, start))
 
 def call_watcher(o, k):
     watcher = 'watch_'+k
@@ -337,15 +337,19 @@ def setup_model_object_infra(o):
         recompute_computed(o, k)
 
 
+
 def start(o, http_port=4260, http_host='localhost', py_port=4259, py_host='localhost', serve=True):
-    g_instances['ROOT'] = o
-    setattr(o, '__id', 'ROOT')
-    setup_model_object_infra(o)
-    #inreader = asyncio.StreamReader(sys.stdin)
-    once = os.environ.get('ONCE') is not None
-    ws_server = websockets.serve(handleClient(once), py_host, py_port)
-    asyncio.ensure_future(ws_server)
-    if serve and os.environ.get('NOSERVE') is None:
-        from .serve import run_http_server
-        run_http_server(http_port, http_host)
-    asyncio.get_event_loop().run_forever()
+    async def async_start():
+        g_instances['ROOT'] = o
+        setattr(o, '__id', 'ROOT')
+        setup_model_object_infra(o)
+        #inreader = asyncio.StreamReader(sys.stdin)
+        once = os.environ.get('ONCE') is not None
+        ws_server = websockets.serve(handleClient(once), py_host, py_port)
+        await ws_server
+        if serve and os.environ.get('NOSERVE') is None:
+            from .serve import run_http_server
+            await run_http_server(http_port, http_host)
+        await asyncio.Future()
+    asyncio.run(async_start())
+        
