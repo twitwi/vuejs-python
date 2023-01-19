@@ -56,7 +56,7 @@ async def run_http_server(port, host='localhost'):
     app.router.add_get('/', index)
     app.router.add_get('/{file:.*[.]html}', patched_html)
     app.router.add_get('/{file:.*lib/.*}', embedded_static)
-    app.router.add_static('/', '.', show_index=True)
+    app.router.add_static('/', '.', show_index=True, follow_symlinks=True)
     #web.run_app(app, host=host, port=port)
     runner = web.AppRunner(app)
     await runner.setup()
