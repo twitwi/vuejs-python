@@ -5,17 +5,22 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="vuejspython",
-    version="0.2.7",
+    version="1.0.123",
     author="Rémi Emonet",
-    author_email="remi-242-e2f8@heeere.com",
-    description="Bridging vuejs and python (e.g., to leverage numpy)",
+    author_email="remi+242-e2f8@heeere.com",
+    description="Vuejs runner, with filesystem, and allowing python extension (e.g., to leverage numpy)",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/twitwi/vuejs-python/",
-    install_requires=['aiohttp', 'websockets'],
+    install_requires=['fastapi', 'uvicorn'],
     packages=setuptools.find_packages(),
     package_data={
-        'vuejspython.static': ['*.js', '*.css']
+        'vuejspython': ['builtin/*.vue', 'builtin/*.js'] #['index.html', 'fsapi.js'], #, '*.js', '*.css']
+    },
+    entry_points = {
+        'console_scripts': [
+            'vjspy = vuejspython.run:cli',                  
+        ],              
     },
     classifiers=[
         "Programming Language :: Python :: 3",

@@ -4,3 +4,5 @@ build/
 dist/
 __pycache__/
 *.egg-info/
+demo/
+.params.json

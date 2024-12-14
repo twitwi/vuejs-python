@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20style='filter:hue-rotate(-60deg)'%20viewBox='0%200%2016%2016'%3E%3Ctext%20transform='scale(-1,1)'%20x='-20'%20y='14'%3E⚡%3C/text%3E%3C/svg%3E"
+      type="image/svg+xml"
+    />
+    <meta charset="UTF-8" />
+    <title>___</title>
+  </head>
+
+  <body>
+    <div id="app"></div>
+
+    <!-- importmap may also be used to download for building the local version -->
+    <script type="importmap" class="addedbyvrunner">
+      {
+        "imports": {
+          "#vue": "https://unpkg.com/vue@3/dist/vue.esm-browser.prod.js",
+          "#sfc": "https://cdn.jsdelivr.net/npm/vue3-sfc-loader/dist/vue3-sfc-loader.esm.js",
+          "#fsapi": "/.runner/fsapi.js"
+        }
+      }
+    </script>
+    <script type="module" class="addedbyvrunner">
+      import * as Vue from "#vue";
+      import { loadModule } from "#sfc";
+      import { FileSystemAPI } from "#fsapi";
+      window.VueRunner = {
+        fs: new FileSystemAPI(),
+        onHash(f) {
+          const notify = () => f(window.location.hash.slice(1), window.location.hash);
+          window.addEventListener("hashchange", () => notify());
+          notify();
+        },
+        setHash(h) {
+          window.location.hash = h;
+        },
+        args: ['will be filled by the runner'],
+      };
+
+      const options = {
+        moduleCache: {
+          vue: Vue,
+        },
+        async getFile(url) {
+          const res = await fetch(url);
+          if (!res.ok)
+            throw Object.assign(new Error(res.statusText + " " + url), { res });
+          return {
+            getContentData: (asBinary) =>
+              asBinary ? res.arrayBuffer() : res.text(),
+          };
+        },
+        addStyle(textContent) {
+          const style = Object.assign(document.createElement("style"), {
+            textContent,
+          });
+          const ref = document.head.getElementsByTagName("style")[0] || null;
+          document.head.insertBefore(style, ref);
+        },
+      };
+
+      const app = Vue.createApp({
+        template: "<entry-point></entry-point>",
+      });
+
+      app.component("entry-point", Vue.defineAsyncComponent(async () => {
+        //window.args ??= await (await fetch("/.params.json")).json();
+        const params = await (await fetch("/.params.json")).json();
+        window.VueRunner.args.splice(0, 1, ...params.slice(1));
+        return await loadModule("__entrypoint.vue", options);
+      }))
+      app.component("add-in-head", {
+        template: "<div class='addedbyvrunner'><slot/></div>",
+        props: {after: false},
+        mounted() {
+          if (this.after) {
+            document.head.append(...this.$el.children);
+          } else {
+            document.head.prepend(...this.$el.children);
+          }
+      }})
+      app.mount("#app");
+    </script>
+  </body>
+</html>
