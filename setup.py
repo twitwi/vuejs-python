@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="vuejspython",
-    version="1.0.123",
+    version="1.0.0",
     author="Rémi Emonet",
     author_email="remi+242-e2f8@heeere.com",
     description="Vuejs runner, with filesystem, and allowing python extension (e.g., to leverage numpy)",
@@ -15,7 +15,7 @@ setuptools.setup(
     install_requires=['fastapi', 'uvicorn'],
     packages=setuptools.find_packages(),
     package_data={
-        'vuejspython': ['builtin/*.vue', 'builtin/*.js'] #['index.html', 'fsapi.js'], #, '*.js', '*.css']
+        #'vuejspython': ['builtin/*.vue', 'builtin/*.js']
     },
     entry_points = {
         'console_scripts': [

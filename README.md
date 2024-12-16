@@ -16,7 +16,7 @@ pip install vuejspython
 ## Usage
 
 ~~~
-vjspy my.vue more arbitrary parameters
+vjspy [--trust-python] [--port=...] [--host=...] myfile.vue more arbitrary parameters
 ~~~
 
 
@@ -56,3 +56,10 @@ pip uninstall vuejspython
 python3 -m pip install  .. ; ll $VENV/lib/python3.6/site-packages/vuejspython
 ~~~
 
+
+
+## TODO
+
+- [ ] Allow --online to get latest libs from cdn
+- [ ] Allow --open-browser to open the file
+- [ ] Allow a random port
