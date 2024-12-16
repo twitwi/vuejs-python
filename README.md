@@ -26,9 +26,8 @@ You can run the bundled tools using their `:` prefixed names instead of the vue 
 vjspy :create-demo-files demo
 vjspy :view-file demo/file1.txt
 vjspy :edit-file demo/file1.txt
-vjspy :file-rotator demo/file1.txt demo/file2.txt
+vjspy --trust-python :file-rotator demo/file*.txt
 vjspy :exam-toggle demo/exam/*
-vjspy --trust-python :view-file ~/.bashrc
 ~~~
 
 
@@ -63,3 +62,6 @@ python3 -m pip install  .. ; ll $VENV/lib/python3.6/site-packages/vuejspython
 - [ ] Allow --online to get latest libs from cdn
 - [ ] Allow --open-browser to open the file
 - [ ] Allow a random port
+- [ ] Update build system...
+- [ ] Allow --allow-all-files
+- [ ] Nicer not-all-recursive listing... for perfs

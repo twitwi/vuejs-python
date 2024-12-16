@@ -37,13 +37,6 @@ async function refresh() {
 async function save() {
     await fs.writeFile(file, content.value);
     await refresh();
-    /*
-    fetch(`/.file/${file}`, {
-        method: 'POST',
-        body: content.value,
-    }).then(()=> {
-        refresh();
-    });*/
 }
 
 refresh();
