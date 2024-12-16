@@ -49,6 +49,7 @@ def startup():
         sys.argv[0] = str(BUILTIN / (sys.argv[0][1:] + ".vue"))
     VUE_PATH = os.path.realpath(sys.argv[0])
     VUE_DIR = pathlib.Path(os.path.dirname(VUE_PATH))
+    script_python_find = r'<script  *lang="python">([^$]*?)</script>'
 
     # one can hack and redefine this function but anyway if we set --trust-python, everything is open
     def is_safe_path(relative_path):
@@ -67,8 +68,12 @@ def startup():
         return FileResponse(RUNNER_DIR / "index.html", headers=NO_CACHE_HEADERS)
 
     @app.get("/__entrypoint.vue", response_model=None)
-    async def vue():
-        return FileResponse(VUE_PATH, headers=NO_CACHE_HEADERS)
+    async def entrypoint():
+        with open(VUE_PATH) as f:
+            vue = f.read()
+            # remove ALL instances of <script lang="python">...</script>, make sure it is all and multiline
+            vue = re.sub(script_python_find, "", vue)
+        return Response(content=vue, media_type="text/plain", headers=NO_CACHE_HEADERS)
 
     # API endpoint to list files in the cwd
     @app.get("/.files", response_model=None)
@@ -120,8 +125,10 @@ def startup():
         with open(VUE_PATH) as f:
             vue = f.read()
             # all instances of <script lang="python">...</script>
-            for m in re.finditer(r'<script  *lang="python">(.*?)</script>', vue, re.DOTALL):
-                exec(m.group(1))
+            for m in re.finditer(script_python_find, vue, re.DOTALL):
+                exec(m.group(1), locals()) # locals is read only (python <=3.12) but still contains app etc, so ok
+                # need reload in some way?
+                # need exec at each request? or file change? or only once? i.e. for dev mode...
 
     @app.get("/{filename:path}")
     async def file(filename: str, response: Response):
