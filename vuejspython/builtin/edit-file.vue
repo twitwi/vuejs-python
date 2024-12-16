@@ -22,7 +22,7 @@ textarea {
 }
 </style>
 <script setup>
-import { ref } from 'vue';
+import { ref } from '#vue';
 const { args, fs } = window.VueRunner;
 
 const file = args[0];

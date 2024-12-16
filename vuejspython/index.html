@@ -17,8 +17,8 @@
     <script type="importmap" class="addedbyvrunner">
       {
         "imports": {
-          "#vue": "/.runner/vue.esm-browser.prod.js", // https://unpkg.com/vue@3/dist/vue.esm-browser.prod.js
-          "#sfc": "/.runner/vue3-sfc-loader.esm.js", // https://cdn.jsdelivr.net/npm/vue3-sfc-loader/dist/vue3-sfc-loader.esm.js
+          "#vue": "/.runner/vue.esm-browser.prod.js", "https://unpkg.com/vue@3/dist/vue.esm-browser.prod.js": "DL",
+          "#sfc": "/.runner/vue3-sfc-loader.esm.js", "https://cdn.jsdelivr.net/npm/vue3-sfc-loader/dist/vue3-sfc-loader.esm.js": "DL",
           "#fsapi": "/.runner/fsapi.js"
         }
       }
@@ -42,7 +42,8 @@
 
       const options = {
         moduleCache: {
-          vue: Vue,
+          '#vue': Vue, // prefer explicit embedded Vue instance
+          vue: Vue, // still if people use 'vue', it is ok
         },
         async getFile(url) {
           const res = await fetch(url);

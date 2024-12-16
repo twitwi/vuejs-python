@@ -20,7 +20,7 @@
 .current { font-weight: bold; }
 </style>
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, watch } from '#vue'; // embedded vue
 const { fs } = window.VueRunner;
 
 const currentFile = ref('');

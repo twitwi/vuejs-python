@@ -109,7 +109,7 @@ h1 pre {
 </style>
 <script type="module">
 const { args, fs, onHash, setHash } = window.VueRunner;
-import { h } from 'vue'
+import { h } from '#vue'
 const Diff = require('.assets/diff.min.js')
 
 function JSONparse(txt) {
