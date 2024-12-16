@@ -38,11 +38,15 @@ vjspy :exam-toggle demo/exam/*
 
 ## Pypi stuff
 
+(in a clean clone, to be sure that not too much thing are copied)
+
 ~~~
 python3 -m pip install --upgrade setuptools wheel
 python3 -m pip install --upgrade twine
 
+
 # update the version number in setup.py and then
+./update-static.sh
 rm -rf dist/
 python3 setup.py sdist bdist_wheel
 python3 -m twine upload --repository-url https://test.pypi.org/legacy/ dist/*
