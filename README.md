@@ -65,3 +65,6 @@ python3 -m pip install  .. ; ll $VENV/lib/python3.6/site-packages/vuejspython
 - [ ] Update build system...
 - [ ] Allow --allow-all-files
 - [ ] Nicer not-all-recursive listing... for perfs
+- [ ] Also add watcher option (need websockets probably)
+- [ ] example: exam, diff does not update/clear on save
+
