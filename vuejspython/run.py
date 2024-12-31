@@ -49,7 +49,7 @@ def startup():
         sys.argv[0] = str(BUILTIN / (sys.argv[0][1:] + ".vue"))
     VUE_PATH = os.path.realpath(sys.argv[0])
     VUE_DIR = pathlib.Path(os.path.dirname(VUE_PATH))
-    script_python_find = r'<script  *lang="python">([^$]*?)</script>'
+    script_python_find = r'<script  *lang="python">([\s\S]*?)</script>'
 
     # one can hack and redefine this function but anyway if we set --trust-python, everything is open
     def is_safe_path(relative_path):
