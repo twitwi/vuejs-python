@@ -26,7 +26,7 @@ You can run the bundled tools using their `:` prefixed names instead of the vue 
 vjspy :create-demo-files demo
 vjspy :view-file demo/file1.txt
 vjspy :edit-file demo/file1.txt
-vjspy --trust-python :file-rotator demo/file*.txt
+vjspy --trust-python :rotate-files demo/file*.txt
 vjspy :exam-toggle demo/exam/*
 ~~~
 
