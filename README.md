@@ -28,6 +28,9 @@ vjspy :view-file demo/file1.txt
 vjspy :edit-file demo/file1.txt
 vjspy --trust-python :rotate-files demo/file*.txt
 vjspy :exam-toggle demo/exam/*
+
+# hosting the current folder with a video player
+vjspy :video-serve
 ~~~
 
 
