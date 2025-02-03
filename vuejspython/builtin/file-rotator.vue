@@ -3,7 +3,7 @@
         <title>Rotate Files</title>
     </add-in-head>
     <div>
-        <h1>Roate <pre>{{ files.length }} files</pre></h1>
+        <h1>Rotate <pre>{{ files.length }} files</pre></h1>
         <div class="main">
             <div v-for="f in files" :class="{ wip: !fileContent[f] }">
                 <h5>{{ f }}</h5>
