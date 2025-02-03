@@ -30,10 +30,10 @@ vjspy :create-demo-files demo
 vjspy :view-file demo/file1.txt
 vjspy :edit-file demo/file1.txt
 vjspy --trust-python :rotate-files demo/file*.txt
-vjspy :exam-toggle demo/exam/*
+vjspy :toggle-exam demo/exam/*
 
 # hosting the current folder with a video player
-vjspy :video-serve
+vjspy :serve-videos
 ~~~
 
 ## Snippets
@@ -91,7 +91,6 @@ It allows only access to files in the folder where the program has been started 
 const { args } = window.VueRunner
 // NB: starts at index 0, no parameters ⇒ args==[]
 alert(JSON.stringify(args))
-</script>
 ~~~
 
 
@@ -133,9 +132,6 @@ function showAbout() {
     ...
     setHash('about')
 }
-setTimeout(showAbout, 1000)
-
-</script>
 ~~~
 
 
@@ -161,7 +157,8 @@ python3 setup.py sdist bdist_wheel
 python3 -m twine upload --repository-url https://test.pypi.org/legacy/ dist/*
 # OR: python3 -m twine upload dist/*
 
-python3 -m pip install --index-url https://test.pypi.org/simple/ --no-deps vuejspython
+python3 -m pip install --index-url https://test.pypi.org/simple/ --upgrade --no-deps vuejspython
+# OR: python3 -m pip install --upgrade --no-deps vuejspython
 
 pip uninstall vuejspython
 
