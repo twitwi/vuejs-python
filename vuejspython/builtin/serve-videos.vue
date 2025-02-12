@@ -14,6 +14,9 @@
             </li>
         </ul>
     </div>
+    <div :class="{logo: true, dismissed}">
+        <img src="__logo.svg" onerror="this.src = this.src.endsWith('svg') ? this.src.replace(/[.]svg$/, '.png') : ''"/>
+    </div>
     <div id="player">
         <video :src="video" controls ref="videoElement" :class="{hidden: video==''}">
             <track :src="(video??'').replace(/[.][^.]*$/g, '.vtt')" kind="subtitles" srclang="en" label="English" default />
@@ -22,7 +25,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "#vue";
+import { ref, onMounted } from "#vue";
 
 const { fs, onHash, setHash } = window.VueRunner;
 
@@ -30,6 +33,9 @@ const loading = ref(false)
 const video = ref('')
 const videoElement = ref(null)
 const files = ref([] as string[])
+const dismissed = ref(false)
+
+onMounted(() => dismissed.value = true)
 
 setInterval(()=> {
     if (videoElement.value) {
@@ -106,6 +112,22 @@ body, html {
     &:not(:hover):not(.force), &.hidden {
         opacity: 0;
         width: 0px;
+    }
+}
+.logo {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  img {
+    max-width: 100vw;
+    max-height: 100vh;
+  }
+  visibility: visible;
+  &.dismissed {
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 1s 1s, visibility 2s;
     }
 }
 </style>
