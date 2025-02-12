@@ -15,7 +15,7 @@
         </ul>
     </div>
     <div id="player">
-        <video :src="video" controls ref="videoElement">
+        <video :src="video" controls ref="videoElement" :class="{hidden: video==''}">
             <track :src="(video??'').replace(/[.][^.]*$/g, '.vtt')" kind="subtitles" srclang="en" label="English" default />
         </video>
     </div>
@@ -67,7 +67,7 @@ onHash(function (f) {
 })
 
 async function start() {
-    files.value = (await fs.listFiles()).files.filter(f => !f.startsWith('.'))
+    files.value = (await fs.listFiles()).files.filter(f => !f.startsWith('.') && !f.startsWith('__') && !f.includes('.part') && !f.endsWith('.vtt') && !f.endsWith('/'))
 }
 start()
 </script>
@@ -86,6 +86,9 @@ body, html {
   justify-content: center;
   video {
       max-height: 100%;
+      &.hidden {
+        display: none;
+      }
   }
 }
 #list {
