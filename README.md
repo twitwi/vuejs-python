@@ -177,16 +177,20 @@ python3 -m pip install  .. ; ll $VENV/lib/python3.6/site-packages/vuejspython
 - [ ] Allow --open-browser to open the file
 - [ ] Allow opening an existing instance if the port is taken (already running)
 - [ ] Allow a random port
-- [ ] Warn if some python but no --trust-python (and neither --no-pyton)
+- [ ] Warn if some python but no --trust-python (and neither --no-pyton) and show the updated command
 - [ ] Allow some config section, e.g. with prefered port etc
 - [ ] Update build system... python setup.py is deprecated
 - [ ] When trust-python, expose an api to run shell commands too (maybe proto in trailtools)
 - [ ] consider integration of .quit (from trailtools logdown / sport)
+- [ ] an eject command to get the source of a bultin
+- [ ] a @pkg/exc to allow for running a custom one, e.g. that have been vjspy install github:twitwi/blabla... or rather pip installed! (with maybe a default per package? so just @pkg is ok?)
+- [ ] video: allow for a logo
+- [ ] video: filter files (e.g. remove extensionless things, vtt too, etc, optionnal, still allow to show all with a checkbox)
 
 BETTER FS API
 
 - [ ] Allow --allow-all-files
 - [ ] Nicer not-all-recursive listing... for perfs
-- [ ] Also add watcher option (need websockets probably, or add a polling e.g. /.changed)
+- [ ] Also add watcher option (need websockets probably, or add a polling e.g. /.changed /.last-change)
 - [ ] consider use as vite-based projects too? and/or a version that hosts a build page but allows the fs api etc? and/or an fsapi that works similarly but in vite? see https://github.com/StarLederer/vite-plugin-fs (for inspiration or direct use) or 4y https://github.com/antfu/vite-fs
 
